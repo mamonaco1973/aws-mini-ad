@@ -119,7 +119,7 @@ fi
   echo "DNS Zone: ${DNS_ZONE}"
   echo "NetBIOS Domain: ${NETBIOS}"
   echo "DC Hostname: ${HOSTNAME_DC}"
-  echo "DC IP: ${IPV4}"
+  echo "DC IP: $IPV4"
   echo
   echo "Administrator password: ${ADMINISTRATOR_PASS}"
   echo "Admin (Domain Admins) password: ${ADMIN_USER_PASS}"
