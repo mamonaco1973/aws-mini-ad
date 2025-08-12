@@ -72,7 +72,7 @@ resource "aws_vpc_dhcp_options" "mini_ad_dns" {
 }
 
 resource "aws_vpc_dhcp_options_association" "mini_ad_dns_assoc" {
-  vpc_id          = aws_vpc.main.id
+  vpc_id          = aws_vpc.ad-vpc.id
   dhcp_options_id = aws_vpc_dhcp_options.mini_ad_dns.id
 }
 
