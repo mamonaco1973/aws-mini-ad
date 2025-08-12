@@ -49,11 +49,11 @@ resource "aws_iam_policy" "secrets_policy" {
           "secretsmanager:ListSecrets"       # List all secrets in AWS Secrets Manager
         ]
         Resource = [
-          data.aws_secretsmanager_secret.admin_secret.arn,
-          data.aws_secretsmanager_secret.jsmith_secret.arn,
-          data.aws_secretsmanager_secret.edavis_secret.arn,
-          data.aws_secretsmanager_secret.rpatel_secret.arn,
-          data.aws_secretsmanager_secret.akumar_secret.arn
+          aws_secretsmanager_secret.admin_secret.arn,
+          aws_secretsmanager_secret.jsmith_secret.arn,
+          aws_secretsmanager_secret.edavis_secret.arn,
+          aws_secretsmanager_secret.rpatel_secret.arn,
+          aws_secretsmanager_secret.akumar_secret.arn
         ]
       },
 
