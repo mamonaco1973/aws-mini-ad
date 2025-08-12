@@ -7,8 +7,6 @@ sudo systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
 sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service
 
-# EC2 user-data: Samba 4 AD DC (mini-AD) non-interactive
-# Domain: mcloud.mikecloud.com  |  Realm: MCLOUD.MIKECLOUD.COM  |  NetBIOS: MCLOUD  |  Hostname: ad1
 
 REALM="${REALM}"
 DNS_ZONE="${DNS_ZONE}"
