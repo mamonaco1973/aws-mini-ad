@@ -93,19 +93,32 @@ if [ ! -f /var/lib/samba/private/sam.ldb ]; then
   echo "Step 6" >> /tmp/userdata.log
 
   systemctl enable samba-ad-dc
+
+  echo "Step 6.1" >> /tmp/userdata.log
+
   systemctl restart samba-ad-dc
 fi
+
+
+echo "Step 6.2" >> /tmp/userdata.log
 
 # Point local resolver to self (and AWS resolver as fallback)
 # NOTE: For prototypes this is fine; for prod use proper resolved/netplan config.
 if [ -L /etc/resolv.conf ]; then
   rm -f /etc/resolv.conf
 fi
+
+echo "Step 6.3" >> /tmp/userdata.log
+
 cat >/etc/resolv.conf <<EOF
 search ${DNS_ZONE}
 nameserver 127.0.0.1
 nameserver 169.254.169.253
 EOF
+
+
+echo "Step 6.4" >> /tmp/userdata.log
+
 # Prevent DHCP/agents from stomping on resolv.conf (prototype-friendly)
 chattr +i /etc/resolv.conf || true
 
