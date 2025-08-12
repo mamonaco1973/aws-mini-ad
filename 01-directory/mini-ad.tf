@@ -42,7 +42,7 @@ resource "aws_instance" "mini_ad_dc_instance" {
   ]
 
   # Assign a public IP so it is reachable from the internet
-  associate_public_ip_address = fa
+  associate_public_ip_address = false
 
   # Attach the IAM instance profile that allows this EC2 to talk to SSM
   iam_instance_profile = aws_iam_instance_profile.ec2_ssm_profile.name
