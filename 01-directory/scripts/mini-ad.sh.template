@@ -58,8 +58,8 @@ systemctl stop smbd nmbd winbind || true
 systemctl disable smbd nmbd winbind || true
 
 # Generate strong passwords (or hardcode if you want)
-ADMINISTRATOR_PASS="$(tr -dc 'A-Za-z0-9!@#%+=' </dev/urandom | head -c 24)"
-ADMIN_USER_PASS="$(tr -dc 'A-Za-z0-9!@#%+=' </dev/urandom | head -c 24)"
+ADMINISTRATOR_PASS="${ADMINISTRATOR_PASS}"
+ADMIN_USER_PASS="${ADMINISTRATOR_PASS}"
 
 # Only provision if not already provisioned
 if [ ! -f /var/lib/samba/private/sam.ldb ]; then
