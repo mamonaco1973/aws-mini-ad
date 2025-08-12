@@ -64,7 +64,7 @@ resource "aws_instance" "mini_ad_dc_instance" {
 
 resource "aws_vpc_dhcp_options" "mini_ad_dns" {
   domain_name          = "mcloud.mikecloud.com"
-  domain_name_servers  = [aws_instance.mini_ad_dc_instance.private_ip, "169.254.169.253"]
+  domain_name_servers  = [aws_instance.mini_ad_dc_instance.private_ip]
 
   tags = {
     Name = "mini-ad-dns"
