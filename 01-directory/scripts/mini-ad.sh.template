@@ -24,6 +24,8 @@ cat >/etc/cloud/cloud.cfg.d/99-preserve-hostname.cfg <<EOF
 preserve_hostname: true
 EOF
 
+echo "Step 1" >> /tmp/userdata.log
+
 hostnamectl set-hostname "$HOSTNAME_DC"
 
 # Grab primary private IP (DHCP expected on EC2)
@@ -31,6 +33,8 @@ IPV4=$(hostname -I | awk '{print $1}')
 # Clean old hosts entries and add ours
 sed -i "/\b$HOSTNAME_DC\b/d" /etc/hosts || true
 echo "$IPV4  ${HOSTNAME_DC}.${DNS_ZONE} ${HOSTNAME_DC}" >> /etc/hosts
+
+echo "Step 2" >> /tmp/userdata.log
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -41,6 +45,8 @@ echo "krb5-config krb5-config/admin_server string" | debconf-set-selections
 
 apt-get update
 apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony
+
+echo "Step 3" >> /tmp/userdata.log
 
 # Configure Chrony to use AWS Time Sync (169.254.169.123)
 if ! grep -q "169.254.169.123" /etc/chrony/chrony.conf; then
@@ -53,6 +59,8 @@ EOF
 fi
 systemctl enable --now chrony
 
+echo "Step 4" >> /tmp/userdata.log
+
 # Stop classic Samba daemons (we’ll run samba-ad-dc)
 systemctl stop smbd nmbd winbind || true
 systemctl disable smbd nmbd winbind || true
@@ -60,6 +68,8 @@ systemctl disable smbd nmbd winbind || true
 # Generate strong passwords (or hardcode if you want)
 ADMINISTRATOR_PASS="${ADMINISTRATOR_PASS}"
 ADMIN_USER_PASS="${ADMIN_USER_PASS}"
+
+echo "Step 5" >> /tmp/userdata.log
 
 # Only provision if not already provisioned
 if [ ! -f /var/lib/samba/private/sam.ldb ]; then
@@ -80,6 +90,8 @@ if [ ! -f /var/lib/samba/private/sam.ldb ]; then
   # Use Samba-generated Kerberos config
   cp /var/lib/samba/private/krb5.conf /etc/krb5.conf
 
+  echo "Step 6" >> /tmp/userdata.log
+
   systemctl enable samba-ad-dc
   systemctl restart samba-ad-dc
 fi
@@ -97,6 +109,8 @@ EOF
 # Prevent DHCP/agents from stomping on resolv.conf (prototype-friendly)
 chattr +i /etc/resolv.conf || true
 
+echo "Step 7 >> /tmp/userdata.log
+
 # Wait briefly for DC to settle
 sleep 5
 
@@ -110,6 +124,8 @@ if ! samba-tool user show Admin >/dev/null 2>&1; then
   samba-tool user create Admin "${ADMIN_USER_PASS}"
   samba-tool group addmembers "Domain Admins" Admin
 fi
+
+echo "Step 8" >> /tmp/userdata.log
 
 # Log important info
 {
@@ -131,6 +147,8 @@ fi
   echo "  host -t SRV _kerberos._tcp.${REALM}"
 } >> "$SECRETS_FILE"
 
+echo "Step 9" >> /tmp/userdata.log
+
 # (Optional) Open UFW ports if UFW is enabled
 if ufw status | grep -q "Status: active"; then
   ufw allow 53/tcp; ufw allow 53/udp
@@ -144,6 +162,8 @@ if ufw status | grep -q "Status: active"; then
   ufw allow 464/tcp; ufw allow 464/udp
   ufw allow 3268/tcp; ufw allow 3269/tcp
 fi
+
+echo "Step 10" >> /tmp/userdata.log
 
 # Done. Reboot once to ensure all name resolution paths are clean (optional).
 reboot
