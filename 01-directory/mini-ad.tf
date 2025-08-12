@@ -61,7 +61,7 @@ resource "aws_instance" "mini_ad_dc_instance" {
     Name = "mini-ad-dc-instance"
   }
 
-  depends_on = [aws_nat_gateway.nat_gateway, aws_route_table_association.rt_assoc_ad_private]
+  depends_on = [aws_nat_gateway.ad_nat, aws_route_table_association.rt_assoc_ad_private]
 }
 
 resource "aws_vpc_dhcp_options" "mini_ad_dns" {
