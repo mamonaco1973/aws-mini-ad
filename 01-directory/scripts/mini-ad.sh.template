@@ -11,7 +11,7 @@ systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service
 REALM="${REALM}"
 DNS_ZONE="${DNS_ZONE}"
 NETBIOS="${NETBIOS}"
-HOSTNAME_DC="{HOSTNAME_DC}"
+HOSTNAME_DC="${HOSTNAME_DC}"
 
 SECRETS_FILE="/root/ad-secrets.txt"
 mkdir -p /root
