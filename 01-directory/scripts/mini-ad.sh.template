@@ -10,10 +10,10 @@ systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service
 # EC2 user-data: Samba 4 AD DC (mini-AD) non-interactive
 # Domain: mcloud.mikecloud.com  |  Realm: MCLOUD.MIKECLOUD.COM  |  NetBIOS: MCLOUD  |  Hostname: ad1
 
-REALM="MCLOUD.MIKECLOUD.COM"
-DNS_ZONE="mcloud.mikecloud.com"
-NETBIOS="MCLOUD"
-HOSTNAME_DC="ad1"
+REALM="${REALM}"
+DNS_ZONE="${DNS_ZONE}"
+NETBIOS="${NETBIOS}"
+HOSTNAME_DC="{HOSTNAME_DC}"
 
 SECRETS_FILE="/root/ad-secrets.txt"
 mkdir -p /root
