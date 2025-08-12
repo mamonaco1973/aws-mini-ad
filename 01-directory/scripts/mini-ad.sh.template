@@ -1,0 +1,6 @@
+# Make sure the SSM Agent is installed and running
+
+sudo snap install amazon-ssm-agent --classic
+sudo systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
+systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service
