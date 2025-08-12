@@ -53,6 +53,7 @@ resource "aws_instance" "mini_ad_dc_instance" {
   REALM       = "MCLOUD.MIKECLOUD.COM"
   NETBIOS     = "MCLOUD"
   ADMINISTRATOR_PASS = random_password.admin_password.result
+  ADMIN_USER_PASS = random_password.admin_user_password.result
 })
 
   # Tag the instance with a recognizable name for filtering or UI display
