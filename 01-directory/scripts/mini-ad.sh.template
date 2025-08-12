@@ -1,12 +1,10 @@
 #!/bin/bash 
 
 # Make sure the SSM Agent is installed and running
-
 sudo snap install amazon-ssm-agent --classic
 sudo systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
 sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service
-
 
 REALM="${REALM}"
 DNS_ZONE="${DNS_ZONE}"
@@ -41,6 +39,18 @@ echo "krb5-config krb5-config/admin_server string" | debconf-set-selections
 
 apt-get update
 apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony
+
+# === Minimal fix: free :53 from systemd-resolved and point DNS to self ===
+systemctl stop systemd-resolved || true
+systemctl disable systemd-resolved || true
+rm -f /etc/resolv.conf
+cat >/etc/resolv.conf <<EOF
+search ${DNS_ZONE}
+nameserver 127.0.0.1
+nameserver 169.254.169.253
+EOF
+chattr +i /etc/resolv.conf || true
+# === end minimal fix ===
 
 # Configure Chrony to use AWS Time Sync (169.254.169.123)
 if ! grep -q "169.254.169.123" /etc/chrony/chrony.conf; then
@@ -83,19 +93,6 @@ if [ ! -f /var/lib/samba/private/sam.ldb ]; then
   systemctl enable samba-ad-dc
   systemctl restart samba-ad-dc
 fi
-
-# Point local resolver to self (and AWS resolver as fallback)
-# NOTE: For prototypes this is fine; for prod use proper resolved/netplan config.
-if [ -L /etc/resolv.conf ]; then
-  rm -f /etc/resolv.conf
-fi
-cat >/etc/resolv.conf <<EOF
-search ${DNS_ZONE}
-nameserver 127.0.0.1
-nameserver 169.254.169.253
-EOF
-# Prevent DHCP/agents from stomping on resolv.conf (prototype-friendly)
-chattr +i /etc/resolv.conf || true
 
 # Wait briefly for DC to settle
 sleep 5
@@ -147,6 +144,3 @@ fi
 
 # Done. Reboot once to ensure all name resolution paths are clean (optional).
 reboot
-
-
-
