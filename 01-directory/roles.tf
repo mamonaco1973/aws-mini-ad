@@ -8,9 +8,9 @@ resource "aws_iam_role" "ec2_secrets_role" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        Service = "ec2.amazonaws.com"  # Only EC2 instances can assume this role
+        Service = "ec2.amazonaws.com" # Only EC2 instances can assume this role
       }
-      Action = "sts:AssumeRole"  # Allows EC2 instances to request temporary credentials
+      Action = "sts:AssumeRole" # Allows EC2 instances to request temporary credentials
     }]
   })
 }
@@ -25,9 +25,9 @@ resource "aws_iam_role" "ec2_ssm_role" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        Service = "ec2.amazonaws.com"  # Only EC2 instances can assume this role
+        Service = "ec2.amazonaws.com" # Only EC2 instances can assume this role
       }
-      Action = "sts:AssumeRole"  # Allows EC2 instances to request temporary credentials
+      Action = "sts:AssumeRole" # Allows EC2 instances to request temporary credentials
     }]
   })
 }
@@ -44,9 +44,9 @@ resource "aws_iam_policy" "secrets_policy" {
       {
         Effect = "Allow"
         Action = [
-          "secretsmanager:GetSecretValue",   # Fetch secret values
-          "secretsmanager:DescribeSecret",   # Get metadata about secrets
-          "secretsmanager:ListSecrets"       # List all secrets in AWS Secrets Manager
+          "secretsmanager:GetSecretValue", # Fetch secret values
+          "secretsmanager:DescribeSecret", # Get metadata about secrets
+          "secretsmanager:ListSecrets"     # List all secrets in AWS Secrets Manager
         ]
         Resource = [
           aws_secretsmanager_secret.admin_secret.arn,
@@ -61,19 +61,19 @@ resource "aws_iam_policy" "secrets_policy" {
       {
         Effect = "Allow"
         Action = [
-          "ec2:DescribeInstances",                        # List EC2 instances
-          "ec2:DescribeIamInstanceProfileAssociations",   # Get IAM profile associations for instances
-          "ec2:DisassociateIamInstanceProfile",           # Remove an IAM profile from an instance
-          "ec2:ReplaceIamInstanceProfileAssociation"      # Swap IAM profiles on an instance
+          "ec2:DescribeInstances",                      # List EC2 instances
+          "ec2:DescribeIamInstanceProfileAssociations", # Get IAM profile associations for instances
+          "ec2:DisassociateIamInstanceProfile",         # Remove an IAM profile from an instance
+          "ec2:ReplaceIamInstanceProfileAssociation"    # Swap IAM profiles on an instance
         ]
-        Resource = "*"  # Applies to all EC2 instances
+        Resource = "*" # Applies to all EC2 instances
       },
 
       # Allow EC2 instances to pass the SSM role to other AWS services
       {
-        Effect = "Allow"
-        Action = "iam:PassRole"
-        Resource = "${aws_iam_role.ec2_ssm_role.arn}"  # Reference to the SSM role ARN
+        Effect   = "Allow"
+        Action   = "iam:PassRole"
+        Resource = "${aws_iam_role.ec2_ssm_role.arn}" # Reference to the SSM role ARN
       }
     ]
   })
@@ -96,17 +96,17 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_policy_2" {
 # Attach the Secrets Manager access policy to the EC2 Secrets role
 resource "aws_iam_role_policy_attachment" "attach_secrets_policy" {
   role       = aws_iam_role.ec2_secrets_role.name
-  policy_arn = aws_iam_policy.secrets_policy.arn  # Custom policy granting Secrets Manager access
+  policy_arn = aws_iam_policy.secrets_policy.arn # Custom policy granting Secrets Manager access
 }
 
 # Create an IAM Instance Profile for EC2 instances using the Secrets role
 resource "aws_iam_instance_profile" "ec2_secrets_profile" {
   name = "EC2SecretsInstanceProfile"
-  role = aws_iam_role.ec2_secrets_role.name  # Associate the EC2SecretsAccessRole with this profile
+  role = aws_iam_role.ec2_secrets_role.name # Associate the EC2SecretsAccessRole with this profile
 }
 
 # Create an IAM Instance Profile for EC2 instances using the SSM role
 resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   name = "EC2SSMProfile"
-  role = aws_iam_role.ec2_ssm_role.name  # Associate the EC2SSMRole with this profile
+  role = aws_iam_role.ec2_ssm_role.name # Associate the EC2SSMRole with this profile
 }

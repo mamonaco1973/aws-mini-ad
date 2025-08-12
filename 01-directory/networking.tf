@@ -8,9 +8,9 @@
 # VPC
 # ---------------------------
 resource "aws_vpc" "ad-vpc" {
-  cidr_block           = "10.0.0.0/24"   # /24 address space for this environment
-  enable_dns_support   = true            # Required for AD/DNS resolution
-  enable_dns_hostnames = true            # Enables DNS hostnames for EC2 instances
+  cidr_block           = "10.0.0.0/24" # /24 address space for this environment
+  enable_dns_support   = true          # Required for AD/DNS resolution
+  enable_dns_hostnames = true          # Enables DNS hostnames for EC2 instances
 
   tags = { Name = "ad-vpc" }
 }
@@ -40,8 +40,8 @@ resource "aws_subnet" "vm-subnet" {
 
 resource "aws_subnet" "ad-subnet" {
   vpc_id                  = aws_vpc.ad-vpc.id
-  cidr_block              = "10.0.0.0/26"  # ~62 usable IPs for DCs/AD services
-  map_public_ip_on_launch = false          # No public IPs for private resources
+  cidr_block              = "10.0.0.0/26" # ~62 usable IPs for DCs/AD services
+  map_public_ip_on_launch = false         # No public IPs for private resources
   availability_zone       = "us-east-2a"
 
   tags = { Name = "ad-subnet" }
@@ -59,9 +59,9 @@ resource "aws_eip" "nat_eip" {
 # Provides outbound internet for instances in private subnets
 # ---------------------------
 resource "aws_nat_gateway" "ad_nat" {
-  subnet_id     = aws_subnet.vm-subnet.id    # NAT must reside in a public subnet
-  allocation_id = aws_eip.nat_eip.id         # Static public IP for stable egress
-  tags = { Name = "ad-nat" }
+  subnet_id     = aws_subnet.vm-subnet.id # NAT must reside in a public subnet
+  allocation_id = aws_eip.nat_eip.id      # Static public IP for stable egress
+  tags          = { Name = "ad-nat" }
 }
 
 # ---------------------------
@@ -71,7 +71,7 @@ resource "aws_nat_gateway" "ad_nat" {
 # ---------------------------
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.ad-vpc.id
-  tags = { Name = "public-route-table" }
+  tags   = { Name = "public-route-table" }
 }
 
 resource "aws_route" "public_default" {
@@ -82,7 +82,7 @@ resource "aws_route" "public_default" {
 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.ad-vpc.id
-  tags = { Name = "private-route-table" }
+  tags   = { Name = "private-route-table" }
 }
 
 resource "aws_route" "private_default" {

@@ -47,24 +47,26 @@ resource "aws_instance" "mini_ad_dc_instance" {
   # Attach the IAM instance profile that allows this EC2 to talk to SSM
   iam_instance_profile = aws_iam_instance_profile.ec2_ssm_profile.name
 
-    user_data = templatefile("./scripts/mini-ad.sh.template", {
-  HOSTNAME_DC = "ad1"
-  DNS_ZONE    = "mcloud.mikecloud.com"
-  REALM       = "MCLOUD.MIKECLOUD.COM"
-  NETBIOS     = "MCLOUD"
-  ADMINISTRATOR_PASS = random_password.admin_password.result
-  ADMIN_USER_PASS = random_password.admin_password.result
-})
+  user_data = templatefile("./scripts/mini-ad.sh.template", {
+    HOSTNAME_DC        = "ad1"
+    DNS_ZONE           = "mcloud.mikecloud.com"
+    REALM              = "MCLOUD.MIKECLOUD.COM"
+    NETBIOS            = "MCLOUD"
+    ADMINISTRATOR_PASS = random_password.admin_password.result
+    ADMIN_USER_PASS    = random_password.admin_password.result
+  })
 
   # Tag the instance with a recognizable name for filtering or UI display
   tags = {
     Name = "mini-ad-dc-instance"
   }
+
+  depends_on = [aws_nat_gateway.nat_gateway, aws_route_table_association.rt_assoc_ad_private]
 }
 
 resource "aws_vpc_dhcp_options" "mini_ad_dns" {
-  domain_name          = "mcloud.mikecloud.com"
-  domain_name_servers  = [aws_instance.mini_ad_dc_instance.private_ip]
+  domain_name         = "mcloud.mikecloud.com"
+  domain_name_servers = [aws_instance.mini_ad_dc_instance.private_ip]
 
   tags = {
     Name = "mini-ad-dns"
