@@ -1,6 +1,154 @@
+#!/bin/bash 
+
 # Make sure the SSM Agent is installed and running
 
 sudo snap install amazon-ssm-agent --classic
 sudo systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
 sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service
+
+# EC2 user-data: Samba 4 AD DC (mini-AD) non-interactive
+# Domain: mcloud.mikecloud.com  |  Realm: MCLOUD.MIKECLOUD.COM  |  NetBIOS: MCLOUD  |  Hostname: ad1
+
+REALM="MCLOUD.MIKECLOUD.COM"
+DNS_ZONE="mcloud.mikecloud.com"
+NETBIOS="MCLOUD"
+HOSTNAME_DC="ad1"
+
+SECRETS_FILE="/root/ad-secrets.txt"
+mkdir -p /root
+touch "$SECRETS_FILE"
+chmod 600 "$SECRETS_FILE"
+
+# Preserve our hostname against cloud-init changes
+mkdir -p /etc/cloud/cloud.cfg.d
+cat >/etc/cloud/cloud.cfg.d/99-preserve-hostname.cfg <<EOF
+preserve_hostname: true
+EOF
+
+hostnamectl set-hostname "$HOSTNAME_DC"
+
+# Grab primary private IP (DHCP expected on EC2)
+IPV4=$(hostname -I | awk '{print $1}')
+# Clean old hosts entries and add ours
+sed -i "/\b$HOSTNAME_DC\b/d" /etc/hosts || true
+echo "$IPV4  ${HOSTNAME_DC}.${DNS_ZONE} ${HOSTNAME_DC}" >> /etc/hosts
+
+export DEBIAN_FRONTEND=noninteractive
+
+# Preseed krb5-user so apt won’t prompt
+echo "krb5-config krb5-config/default_realm string ${REALM}" | debconf-set-selections
+echo "krb5-config krb5-config/kerberos_servers string" | debconf-set-selections
+echo "krb5-config krb5-config/admin_server string" | debconf-set-selections
+
+apt-get update
+apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony
+
+# Configure Chrony to use AWS Time Sync (169.254.169.123)
+if ! grep -q "169.254.169.123" /etc/chrony/chrony.conf; then
+  sed -i 's/^pool .*//g' /etc/chrony/chrony.conf || true
+  cat >>/etc/chrony/chrony.conf <<EOF
+server 169.254.169.123 prefer iburst
+makestep 1.0 3
+rtcsync
+EOF
+fi
+systemctl enable --now chrony
+
+# Stop classic Samba daemons (we’ll run samba-ad-dc)
+systemctl stop smbd nmbd winbind || true
+systemctl disable smbd nmbd winbind || true
+
+# Generate strong passwords (or hardcode if you want)
+ADMINISTRATOR_PASS="$(tr -dc 'A-Za-z0-9!@#%+=' </dev/urandom | head -c 24)"
+ADMIN_USER_PASS="$(tr -dc 'A-Za-z0-9!@#%+=' </dev/urandom | head -c 24)"
+
+# Only provision if not already provisioned
+if [ ! -f /var/lib/samba/private/sam.ldb ]; then
+  mv /etc/samba/smb.conf /etc/samba/smb.conf.bak 2>/dev/null || true
+
+  samba-tool domain provision \
+    --use-rfc2307 \
+    --realm="${REALM}" \
+    --domain="${NETBIOS}" \
+    --server-role=dc \
+    --dns-backend=SAMBA_INTERNAL \
+    --host-name="${HOSTNAME_DC}" \
+    --adminpass="${ADMINISTRATOR_PASS}"
+
+  # Set AWS DNS forwarder for external lookups
+  sed -i '/^\[global\]/a dns forwarder = 169.254.169.253' /etc/samba/smb.conf
+
+  # Use Samba-generated Kerberos config
+  cp /var/lib/samba/private/krb5.conf /etc/krb5.conf
+
+  systemctl enable samba-ad-dc
+  systemctl restart samba-ad-dc
+fi
+
+# Point local resolver to self (and AWS resolver as fallback)
+# NOTE: For prototypes this is fine; for prod use proper resolved/netplan config.
+if [ -L /etc/resolv.conf ]; then
+  rm -f /etc/resolv.conf
+fi
+cat >/etc/resolv.conf <<EOF
+search ${DNS_ZONE}
+nameserver 127.0.0.1
+nameserver 169.254.169.253
+EOF
+# Prevent DHCP/agents from stomping on resolv.conf (prototype-friendly)
+chattr +i /etc/resolv.conf || true
+
+# Wait briefly for DC to settle
+sleep 5
+
+# Kerberos test ticket (Administrator)
+echo "${ADMINISTRATOR_PASS}" | kinit Administrator@${REALM} || true
+klist || true
+kdestroy || true
+
+# Create your day-to-day admin: "Admin" and grant Domain Admins
+if ! samba-tool user show Admin >/dev/null 2>&1; then
+  samba-tool user create Admin "${ADMIN_USER_PASS}"
+  samba-tool group addmembers "Domain Admins" Admin
+fi
+
+# Log important info
+{
+  echo "==== Mini-AD Provisioned ===="
+  echo "Date: $(date -Is)"
+  echo "Realm: ${REALM}"
+  echo "DNS Zone: ${DNS_ZONE}"
+  echo "NetBIOS Domain: ${NETBIOS}"
+  echo "DC Hostname: ${HOSTNAME_DC}"
+  echo "DC IP: ${IPV4}"
+  echo
+  echo "Administrator password: ${ADMINISTRATOR_PASS}"
+  echo "Admin (Domain Admins) password: ${ADMIN_USER_PASS}"
+  echo
+  echo "Useful checks:"
+  echo "  samba-tool domain level show"
+  echo "  samba-tool drs showrepl"
+  echo "  host -t SRV _ldap._tcp.${REALM}"
+  echo "  host -t SRV _kerberos._tcp.${REALM}"
+} >> "$SECRETS_FILE"
+
+# (Optional) Open UFW ports if UFW is enabled
+if ufw status | grep -q "Status: active"; then
+  ufw allow 53/tcp; ufw allow 53/udp
+  ufw allow 88/tcp; ufw allow 88/udp
+  ufw allow 123/udp
+  ufw allow 135/tcp
+  ufw allow 137/udp; ufw allow 138/udp
+  ufw allow 139/tcp
+  ufw allow 389/tcp; ufw allow 389/udp
+  ufw allow 445/tcp
+  ufw allow 464/tcp; ufw allow 464/udp
+  ufw allow 3268/tcp; ufw allow 3269/tcp
+fi
+
+# Done. Reboot once to ensure all name resolution paths are clean (optional).
+reboot
+
+
+
