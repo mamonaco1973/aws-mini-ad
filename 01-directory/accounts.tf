@@ -2,7 +2,7 @@
 resource "random_password" "admin_password" {
   length             = 24    # Set password length to 24 characters
   special            = true  # Include special characters in the password
-  override_special   = "!@#$%" # Limit special characters to this set
+  override_special   = "_-"  # Limit special characters to this set
 }
 
 # Create an AWS Secrets Manager secret to store AD Admin credentials
@@ -30,7 +30,7 @@ resource "aws_secretsmanager_secret_version" "admin_secret_version" {
 resource "random_password" "jsmith_password" {
   length             = 24
   special            = true
-  override_special   = "!@#$%"
+  override_special   = "_-"
 }
 
 # Create a Secrets Manager entry for John Smith's credentials
@@ -58,7 +58,7 @@ resource "aws_secretsmanager_secret_version" "jsmith_secret_version" {
 resource "random_password" "edavis_password" {
   length             = 24
   special            = true
-  override_special   = "!@#$%"
+  override_special   = "_-"
 }
 
 # Create a Secrets Manager entry for Emily Davis's credentials
@@ -86,7 +86,7 @@ resource "aws_secretsmanager_secret_version" "edavis_secret_version" {
 resource "random_password" "rpatel_password" {
   length             = 24
   special            = true
-  override_special   = "!@#$%"
+  override_special   = "_-"
 }
 
 # Create a Secrets Manager entry for Raj Patel's credentials
@@ -114,7 +114,7 @@ resource "aws_secretsmanager_secret_version" "rpatel_secret_version" {
 resource "random_password" "akumar_password" {
   length             = 24
   special            = true
-  override_special   = "!@#$%"
+  override_special   = "_-"
 }
 
 # Create a Secrets Manager entry for Amit Kumar's credentials
