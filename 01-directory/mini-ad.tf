@@ -31,7 +31,7 @@ resource "aws_instance" "mini_ad_dc_instance" {
   ami = data.aws_ami.ubuntu_ami.id
 
   # Choose a micro instance type – good enough for demo workloads, not prod
-  instance_type = "t3.micro"
+  instance_type = "t3.small"
 
   # Drop this instance in the specified private subnet
   subnet_id = aws_subnet.ad-subnet.id
@@ -53,6 +53,6 @@ resource "aws_instance" "mini_ad_dc_instance" {
 
   # Tag the instance with a recognizable name for filtering or UI display
   tags = {
-    Name = "mini-ad-dc"
+    Name = "mini-ad-dc-instance"
   }
 }
