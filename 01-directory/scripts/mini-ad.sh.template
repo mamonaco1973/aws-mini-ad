@@ -85,6 +85,8 @@ if [ ! -f /var/lib/samba/private/sam.ldb ]; then
     --adminpass="${ADMINISTRATOR_PASS}"
 
   # Set AWS DNS forwarder for external lookups
+  
+  sudo sed -i '/^\s*dns forwarder\s*=/d' /etc/samba/smb.conf
   sed -i '/^\[global\]/a dns forwarder = 169.254.169.253' /etc/samba/smb.conf
 
   # Use Samba-generated Kerberos config
