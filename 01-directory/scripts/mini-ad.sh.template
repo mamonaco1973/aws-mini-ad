@@ -18,6 +18,21 @@ systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
 systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 
 #--------------------------------------------------------------------
+# Install necessary packages for Active Directory Domain Controller
+#--------------------------------------------------------------------
+apt-get update
+apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony unzip
+
+#--------------------------------------------------------------------
+# Install AWS CLI
+#--------------------------------------------------------------------
+
+curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+unzip -q /tmp/awscliv2.zip -d /tmp
+sudo /tmp/aws/install --update
+rm -rf /tmp/aws /tmp/awscliv2.zip
+
+#--------------------------------------------------------------------
 # Prepare secrets file with restrictive permissions
 #--------------------------------------------------------------------
 SECRETS_FILE="/root/ad-secrets.txt"
@@ -52,12 +67,6 @@ export DEBIAN_FRONTEND=noninteractive
 debconf-set-selections <<< "krb5-config krb5-config/default_realm string ${REALM}"
 debconf-set-selections <<< "krb5-config krb5-config/kerberos_servers string"
 debconf-set-selections <<< "krb5-config krb5-config/admin_server string"
-
-#--------------------------------------------------------------------
-# Install necessary packages for Active Directory Domain Controller
-#--------------------------------------------------------------------
-apt-get update
-apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony
 
 #--------------------------------------------------------------------
 # Configure Chrony to sync with AWS Time Sync service
