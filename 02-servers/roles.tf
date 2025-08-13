@@ -1,6 +1,6 @@
 # Define an IAM Role for EC2 instances to access AWS Secrets Manager
 resource "aws_iam_role" "ec2_secrets_role" {
-  name = "EC2SecretsAccessRole--${var.netbios}"
+  name = "EC2SecretsAccessRole-${var.netbios}"
 
   # Define the trust policy allowing EC2 instances to assume this role
   assume_role_policy = jsonencode({
@@ -28,15 +28,10 @@ resource "aws_iam_policy" "secrets_policy" {
         Effect = "Allow"
         Action = [
           "secretsmanager:GetSecretValue", # Fetch secret values
-          "secretsmanager:DescribeSecret", # Get metadata about secrets
-          "secretsmanager:ListSecrets"     # List all secrets in AWS Secrets Manager
+          "secretsmanager:DescribeSecret"  # Get metadata about secrets
         ]
         Resource = [
-          data.aws_secretsmanager_secret.admin_secret.arn,
-          aws_secretsmanager_secret.jsmith_secret.arn,
-          aws_secretsmanager_secret.edavis_secret.arn,
-          aws_secretsmanager_secret.rpatel_secret.arn,
-          aws_secretsmanager_secret.akumar_secret.arn
+          data.aws_secretsmanager_secret.admin_secret.arn
         ]
       }
     ]

@@ -39,12 +39,12 @@ while true; do
   sleep 30
 done
 
-# # Build Phase 2 - Create EC2 Instances
+# Build Phase 2 - Create EC2 Instances
 
-# cd 02-servers
+cd 02-servers
 
-# terraform init
-# terraform apply -auto-approve
+terraform init
+terraform apply -auto-approve
 
-# cd .. 
+cd .. 
 

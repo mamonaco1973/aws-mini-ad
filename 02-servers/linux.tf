@@ -54,16 +54,15 @@
 #   # - `domain_fqdn`: The fully qualified domain name (FQDN) for the environment.
 #   # - `computers_ou`: The Organizational Unit where computers are registered in Active Directory.
 
-#   user_data = templatefile("./scripts/userdata.sh", { 
-#     admin_secret = "admin_ad_credentials"                       # The administrator credentials secret
-#     domain_fqdn  = "mcloud.mikecloud.com"                       # The domain FQDN for Active Directory integration.
-#     computers_ou = "OU=Computers,OU=MCLOUD,DC=mcloud,DC=mikecloud,DC=com" # The AD OU where computers will be placed.
+#   user_data = templatefile("./scripts/userdata.sh", {
+#     admin_secret = "admin_ad_credentials" # The administrator credentials secret
+#     domain_fqdn  = "mcloud.mikecloud.com" # The domain FQDN for Active Directory integration.
 #   })
 
 #   # INSTANCE TAGS
 #   # Metadata tag used to identify and organize resources in AWS.
 
 #   tags = {
-#     Name = "linux-ad-instance"  # The EC2 instance name in AWS.
+#     Name = "linux-ad-instance" # The EC2 instance name in AWS.
 #   }
 # }

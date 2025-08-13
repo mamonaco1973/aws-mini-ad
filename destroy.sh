@@ -5,16 +5,16 @@
 
 export AWS_DEFAULT_REGION=us-east-2  # Required so AWS CLI/Terraform know where to operate
 
-# cd 02-servers
+cd 02-servers
 
-# terraform init
-# terraform destroy -auto-approve
+terraform init
+terraform destroy -auto-approve
 
-# cd ..
+cd ..
 
-# # Phase 2 of Destroy - delete AD instance
+# Phase 2 of Destroy - delete AD instance
 
-# # Force secret deletion
+# Force secret deletion
 
 aws secretsmanager delete-secret --secret-id "akumar_ad_credentials" --force-delete-without-recovery
 aws secretsmanager delete-secret --secret-id "jsmith_ad_credentials" --force-delete-without-recovery

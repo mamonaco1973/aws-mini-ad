@@ -68,4 +68,10 @@ resource "aws_instance" "windows_ad_instance" {
   tags = {
     Name = "windows-ad-instance" # The EC2 instance name in AWS.
   }
+
+  depends_on = [ aws_secretsmanager_secret.akumar_secret,
+    aws_secretsmanager_secret.edavis_secret,
+    aws_secretsmanager_secret.jsmith_secret,
+    aws_secretsmanager_secret.rpatel_secret]
+      
 }

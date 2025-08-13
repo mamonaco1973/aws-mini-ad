@@ -28,6 +28,12 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_parameter_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
 }
 
+resource "aws_iam_role_policy_attachment" "attach_secrets_rw" {
+  role       = aws_iam_role.ec2_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+}
+
+
 # Create an IAM Instance Profile for EC2 instances using the SSM role
 resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   name = "EC2SSMProfile-MiniAD-${var.netbios}"
