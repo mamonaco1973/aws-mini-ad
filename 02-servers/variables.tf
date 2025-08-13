@@ -34,12 +34,3 @@ variable "netbios" {
   type        = string
   default     = "MCLOUD"
 }
-
-# --------------------------------------------------------------------------------
-# OU for the join.
-# --------------------------------------------------------------------------------
-variable "computers_ou" {
-  description = "OU for computers objects (e.g., OU=Computers,DC=example,DC=com)"
-  type        = string
-  default     = "CN=Computers,DC=mcloud,DC=mikecloud,DC=com"
-}

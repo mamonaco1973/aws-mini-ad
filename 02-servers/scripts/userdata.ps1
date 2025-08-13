@@ -36,7 +36,7 @@ $password = $secretObject.password | ConvertTo-SecureString -AsPlainText -Force
 $cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $secretObject.username, $password
 
 # Join the EC2 instance to the Active Directory domain
-Add-Computer -DomainName "${domain_fqdn}" -Credential $cred -Force -OUPath "${computers_ou}"
+Add-Computer -DomainName "${domain_fqdn}" -Credential $cred -Force 
 
 # ------------------------------------------------------------
 # Create AD Groups for User Management

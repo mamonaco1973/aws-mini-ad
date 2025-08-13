@@ -61,7 +61,6 @@ resource "aws_instance" "windows_ad_instance" {
   user_data = templatefile("./scripts/userdata.ps1", {
     admin_secret = "admin_ad_credentials" # The administrator credentials secret.
     domain_fqdn  = var.dns_zone           # The domain FQDN for Active Directory integration.
-    computers_ou = var.computers_ou       # The AD OU where computers will be placed.
   })
 
   # INSTANCE TAGS
