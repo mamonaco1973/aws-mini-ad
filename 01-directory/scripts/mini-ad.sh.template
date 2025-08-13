@@ -1,12 +1,13 @@
 #!/bin/bash
 #--------------------------------------------------------------------
-# Wait for NAT gateway to be ready.
+# Wait for NAT gateway to be ready - AWS Specific
 #--------------------------------------------------------------------
 
 until curl -s --head https://archive.ubuntu.com/ >/dev/null; do
-  echo "WARNING: Waiting for internet via NAT..." >> /root/userdata.log
+  echo "WARNING: Waiting for internet to become available..." >> /root/userdata.log
   sleep 5
 done
+echo "NOTE: Internet is available." >> /root/userdata.log
 
 #--------------------------------------------------------------------
 # Load configuration variables from environment
