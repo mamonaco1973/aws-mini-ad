@@ -7,6 +7,7 @@ sudo systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
 sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service
 
+echo "Step 0" >> /root/userdata.log
 
 REALM="${REALM}"
 DNS_ZONE="${DNS_ZONE}"
@@ -24,7 +25,7 @@ cat >/etc/cloud/cloud.cfg.d/99-preserve-hostname.cfg <<EOF
 preserve_hostname: true
 EOF
 
-echo "Step 1" >> /tmp/userdata.log
+echo "Step 1" >> /root/userdata.log
 
 hostnamectl set-hostname "$HOSTNAME_DC"
 
@@ -85,7 +86,7 @@ if [ ! -f /var/lib/samba/private/sam.ldb ]; then
     --adminpass="${ADMINISTRATOR_PASS}"
 
   # Set AWS DNS forwarder for external lookups
-  
+
   sudo sed -i '/^\s*dns forwarder\s*=/d' /etc/samba/smb.conf
   sed -i '/^\[global\]/a dns forwarder = 169.254.169.253' /etc/samba/smb.conf
 
