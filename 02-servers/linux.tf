@@ -2,10 +2,10 @@
 # # This resource block defines an AWS EC2 instance named "linux_ad_instance".
 
 # resource "aws_instance" "linux_ad_instance" {
-  
+
 #   # AMAZON MACHINE IMAGE (AMI)
 #   # Reference the Ubuntu AMI ID fetched dynamically via the data source.
-  
+
 #   ami = data.aws_ami.ubuntu_ami.id
 
 #   # INSTANCE TYPE
@@ -17,7 +17,7 @@
 #   # NETWORK CONFIGURATION - SUBNET
 #   # Specifies the AWS subnet where the instance will be deployed.
 #   # The subnet is dynamically retrieved from a data source (ad_subnet_1).
-  
+
 #   subnet_id = data.aws_subnet.ad_subnet_1.id
 
 #   # SECURITY GROUPS
@@ -32,19 +32,19 @@
 
 #   # PUBLIC IP ASSIGNMENT
 #   # Ensures the instance gets a public IP upon launch for external access.
-  
+
 #   associate_public_ip_address = true
 
 #   # SSH KEY PAIR
 #   # Assigns an SSH key pair for secure access.
 #   # The key pair is expected to be created elsewhere in the Terraform configuration.
-  
+
 #   # key_name = aws_key_pair.ec2_key_pair.key_name
 
 #   # IAM INSTANCE PROFILE
 #   # Assigns an IAM role with the necessary permissions for accessing AWS resources securely.
 #   # This is often used for granting access to S3, Secrets Manager, or other AWS services.
-  
+
 #   iam_instance_profile = aws_iam_instance_profile.ec2_secrets_profile.name
 
 #   # USER DATA SCRIPT

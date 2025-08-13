@@ -14,7 +14,7 @@ data "aws_secretsmanager_secret" "admin_secret" {
 
 data "aws_subnet" "vm_subnet" {
   filter {
-    name   = "tag:Name" # Match based on the 'Name' tag
+    name   = "tag:Name"    # Match based on the 'Name' tag
     values = ["vm-subnet"] # Look for a subnet tagged as "ad-subnet-1"
   }
 }
@@ -34,8 +34,8 @@ data "aws_vpc" "ad_vpc" {
 # This ensures that the latest security patches and features are included
 
 data "aws_ami" "ubuntu_ami" {
-  most_recent = true                         # Get the latest available AMI
-  owners      = ["099720109477"]             # Canonical's AWS Account ID for official Ubuntu images
+  most_recent = true             # Get the latest available AMI
+  owners      = ["099720109477"] # Canonical's AWS Account ID for official Ubuntu images
 
   filter {
     name   = "name"                          # Filter AMIs by name pattern
@@ -47,8 +47,8 @@ data "aws_ami" "ubuntu_ami" {
 # This ensures we deploy the latest Windows Server OS image
 
 data "aws_ami" "windows_ami" {
-  most_recent = true                     # Fetch the latest Windows Server AMI
-  owners      = ["amazon"]               # AWS official account for Windows AMIs
+  most_recent = true       # Fetch the latest Windows Server AMI
+  owners      = ["amazon"] # AWS official account for Windows AMIs
 
   filter {
     name   = "name"                                      # Filter AMIs by name pattern

@@ -2,7 +2,7 @@
 # This resource block defines an AWS EC2 instance named "windows_ad_instance".
 
 resource "aws_instance" "windows_ad_instance" {
-  
+
   # AMAZON MACHINE IMAGE (AMI)
   # Reference the Windows AMI ID fetched dynamically via the data source.
   # This ensures the latest or specific Windows Server version is used.
@@ -13,21 +13,21 @@ resource "aws_instance" "windows_ad_instance" {
   # Defines the compute power of the EC2 instance.
   # "t2.medium" is selected to provide more RAM and CPU power, 
   # since Windows requires more resources than Linux.
-  
+
   instance_type = "t2.medium"
 
   # NETWORK CONFIGURATION - SUBNET
   # Specifies the AWS subnet where the instance will be deployed.
   # The subnet is dynamically retrieved from a data source (ad_subnet_2).
   # This determines whether the instance is public or private.
-  
+
   subnet_id = data.aws_subnet.ad_subnet_2.id
 
   # SECURITY GROUPS
   # Applies two security groups:
   # 1. `ad_rdp_sg` - Allows Remote Desktop Protocol (RDP) access for Windows management.
   # 2. `ad_ssm_sg` - Allows AWS Systems Manager access for remote management.
-  
+
   vpc_security_group_ids = [
     aws_security_group.ad_rdp_sg.id,
     aws_security_group.ad_ssm_sg.id
@@ -42,13 +42,13 @@ resource "aws_instance" "windows_ad_instance" {
   # SSH KEY PAIR (FOR ADMIN ACCESS)
   # Assigns an SSH key pair for secure access.
   # Even though this is a Windows instance, the key may be used for encrypted RDP authentication.
-  
+
   # key_name = aws_key_pair.ec2_key_pair.key_name
 
   # IAM INSTANCE PROFILE
   # Assigns an IAM role with the necessary permissions for accessing AWS resources securely.
   # This is often used for granting access to S3, Secrets Manager, or other AWS services.
-  
+
   iam_instance_profile = aws_iam_instance_profile.ec2_secrets_profile.name
 
   # USER DATA SCRIPT
@@ -57,16 +57,16 @@ resource "aws_instance" "windows_ad_instance" {
   # - `admin_secret`: The administrator credentials secret.
   # - `domain_fqdn`: The fully qualified domain name (FQDN) for the environment.
   # - `computers_ou`: The Organizational Unit where computers are registered in Active Directory.
-  
-  user_data = templatefile("./scripts/userdata.ps1", { 
-    admin_secret = "admin_ad_credentials"                       # The administrator credentials secret.
-    domain_fqdn  = var.dns_zone                                 # The domain FQDN for Active Directory integration.
-    computers_ou = var.computers_ou # The AD OU where computers will be placed.
+
+  user_data = templatefile("./scripts/userdata.ps1", {
+    admin_secret = "admin_ad_credentials" # The administrator credentials secret.
+    domain_fqdn  = var.dns_zone           # The domain FQDN for Active Directory integration.
+    computers_ou = var.computers_ou       # The AD OU where computers will be placed.
   })
 
   # INSTANCE TAGS
   # Metadata tag used to identify and organize resources in AWS.
   tags = {
-    Name = "windows-ad-instance"  # The EC2 instance name in AWS.
+    Name = "windows-ad-instance" # The EC2 instance name in AWS.
   }
 }
