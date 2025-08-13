@@ -22,7 +22,7 @@ ADMIN_USER_PASS="${ADMIN_USER_PASS}"
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update >> /root/userdata.log 2>&1
-apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony unzip >> /root/userdata.log 2>&1
+apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony unzip ldb-tools >> /root/userdata.log 2>&1
 
 #--------------------------------------------------------------------
 # Install AWS CLI
@@ -181,6 +181,42 @@ fi
   echo "  host -t SRV _kerberos._tcp.${REALM}"
 } >> "$SECRETS_FILE"
 
+#--------------------------------------------------------------------
+# Create some example groups and users
+#--------------------------------------------------------------------
+
+# Base gidNumber for the primary group
+BASE_GID=10001
+
+# Starting point for uidNumber allocation
+UID_COUNTER=10000
+
+# Create groups if they don't exist
+for group in "mcloud-users" "us" "india" "linux-admins"; do
+    if ! samba-tool group show "$group" >/dev/null 2>&1; then
+        echo "Creating group: $group"
+        samba-tool group add "$group" --nis-domain="${NETBIOS}" \
+            --gid-number="$BASE_GID"
+    fi
+done
+
+# ---------------------------
+# Function: get_secret_password
+# Reads a secret from AWS Secrets Manager
+# ---------------------------
+get_secret_password() {
+    local secret_id="$1"
+    aws secretsmanager get-secret-value \
+        --secret-id "$secret_id" \
+        --query SecretString \
+        --output text | jq -r .password
+}
+
+# ---------------------------
+# Boot-time counters
+# ---------------------------
+BASE_GID=10001
+UID_COUNTER=10000
 
 #--------------------------------------------------------------------
 # Signal that mini-AD initialization iscomplete
