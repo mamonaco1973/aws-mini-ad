@@ -22,7 +22,7 @@ systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 #--------------------------------------------------------------------
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get update
+apt-get update >> /tmp/apt-get.log
 apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony unzip >> /tmp/apt-get.log
 
 #--------------------------------------------------------------------
