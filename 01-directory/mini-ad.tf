@@ -49,9 +49,9 @@ resource "aws_instance" "mini_ad_dc_instance" {
 
   user_data = templatefile("./scripts/mini-ad.sh.template", {
     HOSTNAME_DC        = "ad1"
-    DNS_ZONE           = "mcloud.mikecloud.com"
-    REALM              = "MCLOUD.MIKECLOUD.COM"
-    NETBIOS            = "MCLOUD"
+    DNS_ZONE           = var.dns_zone
+    REALM              = var.realm
+    NETBIOS            = var.netbios
     ADMINISTRATOR_PASS = random_password.admin_password.result
     ADMIN_USER_PASS    = random_password.admin_password.result
   })
@@ -65,7 +65,7 @@ resource "aws_instance" "mini_ad_dc_instance" {
 }
 
 resource "aws_vpc_dhcp_options" "mini_ad_dns" {
-  domain_name         = "mcloud.mikecloud.com"
+  domain_name         = var.dns_zone
   domain_name_servers = [aws_instance.mini_ad_dc_instance.private_ip]
 
   tags = {
