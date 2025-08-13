@@ -22,8 +22,8 @@ systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 #--------------------------------------------------------------------
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get update >> /root/apt-get.log
-apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony unzip >> /root/apt-get.log
+apt-get update >> /root/apt-get.log 2>&1
+apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony unzip >> /root/apt-get.log 2>&1
 
 #--------------------------------------------------------------------
 # Install AWS CLI
@@ -31,7 +31,7 @@ apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony un
 
 curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
 unzip -q /tmp/awscliv2.zip -d /tmp
-sudo /tmp/aws/install --update >> /root/apt-get.log
+sudo /tmp/aws/install --update >> /root/apt-get.log 2>&1
 rm -rf /tmp/aws /tmp/awscliv2.zip
 
 #--------------------------------------------------------------------
