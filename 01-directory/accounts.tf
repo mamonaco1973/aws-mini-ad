@@ -19,7 +19,7 @@ resource "aws_secretsmanager_secret" "admin_secret" {
 resource "aws_secretsmanager_secret_version" "admin_secret_version" {
   secret_id = aws_secretsmanager_secret.admin_secret.id # Reference the secret
   secret_string = jsonencode({
-    username = "${var.netbios}\\Admin"                       # AD username
+    username = "${var.netbios}\\Admin"               # AD username
     password = random_password.admin_password.result # Generated password
   })
 }

@@ -24,7 +24,7 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_policy_2" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach_ssm_parameter_policy" {
-  role       =  aws_iam_role.ec2_ssm_role.name
+  role       = aws_iam_role.ec2_ssm_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
 }
 

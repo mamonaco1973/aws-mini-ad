@@ -1,6 +1,6 @@
 variable "dns_zone" {
   description = "AD DNS zone / domain (e.g., mcloud.mikecloud.com)"
-  default      = "mcloud.mikecloud.com"
+  default     = "mcloud.mikecloud.com"
   type        = string
 }
 
