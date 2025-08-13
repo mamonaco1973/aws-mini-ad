@@ -1,5 +1,12 @@
 #!/bin/bash
 #--------------------------------------------------------------------
+# Ensure SSM Agent is installed and running for remote management
+#--------------------------------------------------------------------
+snap install amazon-ssm-agent --classic
+systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
+
+#--------------------------------------------------------------------
 # Wait for NAT gateway to be ready - AWS Specific
 #--------------------------------------------------------------------
 
@@ -18,13 +25,6 @@ NETBIOS="${NETBIOS}"
 HOSTNAME_DC="${HOSTNAME_DC}"
 ADMINISTRATOR_PASS="${ADMINISTRATOR_PASS}"
 ADMIN_USER_PASS="${ADMIN_USER_PASS}"
-
-#--------------------------------------------------------------------
-# Ensure SSM Agent is installed and running for remote management
-#--------------------------------------------------------------------
-snap install amazon-ssm-agent --classic
-systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
-systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 
 #--------------------------------------------------------------------
 # Install necessary packages for Active Directory Domain Controller
