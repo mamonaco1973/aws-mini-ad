@@ -1,13 +1,6 @@
 #!/bin/bash
 
 #--------------------------------------------------------------------
-# Ensure SSM Agent is installed and running for remote management
-#--------------------------------------------------------------------
-snap install amazon-ssm-agent --classic
-systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
-systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
-
-#--------------------------------------------------------------------
 # Load configuration variables from environment
 #--------------------------------------------------------------------
 REALM="${REALM}"
@@ -16,6 +9,13 @@ NETBIOS="${NETBIOS}"
 HOSTNAME_DC="${HOSTNAME_DC}"
 ADMINISTRATOR_PASS="${ADMINISTRATOR_PASS}"
 ADMIN_USER_PASS="${ADMIN_USER_PASS}"
+
+#--------------------------------------------------------------------
+# Ensure SSM Agent is installed and running for remote management
+#--------------------------------------------------------------------
+snap install amazon-ssm-agent --classic
+systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 
 #--------------------------------------------------------------------
 # Prepare secrets file with restrictive permissions
@@ -149,7 +149,7 @@ fi
   echo "DNS Zone: ${DNS_ZONE}"
   echo "NetBIOS Domain: ${NETBIOS}"
   echo "DC Hostname: ${HOSTNAME_DC}"
-  echo "DC IP: ${IPV4}"
+  echo "DC IP: $IPV4"
   echo
   echo "Administrator password: ${ADMINISTRATOR_PASS}"
   echo "Admin (Domain Admins) password: ${ADMIN_USER_PASS}"
