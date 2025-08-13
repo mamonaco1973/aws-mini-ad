@@ -61,7 +61,7 @@ resource "aws_instance" "mini_ad_dc_instance" {
     Name = "mini-ad-dc-${lower(var.netbios)}"
   }
 
-  depends_on = [time_sleep.wait_for_natgw,
+  depends_on = [aws_nat_gateway.ad_nat,
                 aws_route_table_association.rt_assoc_ad_private ]
 }
 
@@ -74,8 +74,14 @@ resource "aws_vpc_dhcp_options" "mini_ad_dns" {
   }
 }
 
+resource "time_sleep" "wait_for_mini_ad" {
+  depends_on      = [aws_instance.mini_ad_dc_instance]
+  create_duration = "180s"
+}
+
 resource "aws_vpc_dhcp_options_association" "mini_ad_dns_assoc" {
   vpc_id          = aws_vpc.ad-vpc.id
   dhcp_options_id = aws_vpc_dhcp_options.mini_ad_dns.id
+  depends_on      = [time_sleep.wait_for_mini_ad]
 }
 

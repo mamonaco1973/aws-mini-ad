@@ -64,12 +64,6 @@ resource "aws_nat_gateway" "ad_nat" {
   tags          = { Name = "ad-nat" }
 }
 
-# Delay after NAT Gateway creation to allow it to fully initialize
-resource "time_sleep" "wait_for_natgw" {
-  depends_on      = [aws_nat_gateway.ad_nat]
-  create_duration = "180s"
-}
-
 # ---------------------------
 # Route Tables
 #   - public: default route to IGW for internet access
