@@ -35,7 +35,7 @@ IPV4=$(hostname -I | awk '{print $1}')
 sed -i "/\b$HOSTNAME_DC\b/d" /etc/hosts || true
 echo "$IPV4  ${HOSTNAME_DC}.${DNS_ZONE} ${HOSTNAME_DC}" >> /etc/hosts
 
-echo "Step 2" >> /tmp/userdata.log
+echo "Step 2" >> /root/userdata.log
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -47,7 +47,7 @@ echo "krb5-config krb5-config/admin_server string" | debconf-set-selections
 apt-get update
 apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony
 
-echo "Step 3" >> /tmp/userdata.log
+echo "Step 3" >> /root/userdata.log
 
 # Configure Chrony to use AWS Time Sync (169.254.169.123)
 if ! grep -q "169.254.169.123" /etc/chrony/chrony.conf; then
@@ -60,7 +60,7 @@ EOF
 fi
 systemctl enable --now chrony
 
-echo "Step 4" >> /tmp/userdata.log
+echo "Step 4" >> /root/userdata.log
 
 # Stop classic Samba daemons (we’ll run samba-ad-dc)
 systemctl stop smbd nmbd winbind || true
@@ -70,7 +70,7 @@ systemctl disable smbd nmbd winbind || true
 ADMINISTRATOR_PASS="${ADMINISTRATOR_PASS}"
 ADMIN_USER_PASS="${ADMIN_USER_PASS}"
 
-echo "Step 5" >> /tmp/userdata.log
+echo "Step 5" >> /root/userdata.log
 
 # Only provision if not already provisioned
 if [ ! -f /var/lib/samba/private/sam.ldb ]; then
@@ -93,11 +93,11 @@ if [ ! -f /var/lib/samba/private/sam.ldb ]; then
   # Use Samba-generated Kerberos config
   cp /var/lib/samba/private/krb5.conf /etc/krb5.conf
 
-  echo "Step 6" >> /tmp/userdata.log
+  echo "Step 6" >> /root/userdata.log
 
   systemctl enable samba-ad-dc
 
-  echo "Step 6.1" >> /tmp/userdata.log
+  echo "Step 6.1" >> /root/userdata.log
 
   systemctl restart samba-ad-dc
 fi
@@ -105,7 +105,7 @@ fi
 systemctl stop systemd-resolved || true
 systemctl disable systemd-resolved || true
 
-echo "Step 6.2" >> /tmp/userdata.log
+echo "Step 6.2" >> /root/userdata.log
 
 # Point local resolver to self (and AWS resolver as fallback)
 # NOTE: For prototypes this is fine; for prod use proper resolved/netplan config.
@@ -113,7 +113,7 @@ if [ -L /etc/resolv.conf ]; then
   rm -f /etc/resolv.conf
 fi
 
-echo "Step 6.3" >> /tmp/userdata.log
+echo "Step 6.3" >> /root/userdata.log
 
 cat >/etc/resolv.conf <<EOF
 search ${DNS_ZONE}
@@ -122,12 +122,12 @@ nameserver 169.254.169.253
 EOF
 
 
-echo "Step 6.4" >> /tmp/userdata.log
+echo "Step 6.4" >> /root/userdata.log
 
 # Prevent DHCP/agents from stomping on resolv.conf (prototype-friendly)
 chattr +i /etc/resolv.conf || true
 
-echo "Step 7" >> /tmp/userdata.log
+echo "Step 7" >> /root/userdata.log
 
 # Wait briefly for DC to settle
 sleep 5
@@ -143,7 +143,7 @@ if ! samba-tool user show Admin >/dev/null 2>&1; then
   samba-tool group addmembers "Domain Admins" Admin
 fi
 
-echo "Step 8" >> /tmp/userdata.log
+echo "Step 8" >> /root/userdata.log
 
 # Log important info
 {
@@ -165,7 +165,7 @@ echo "Step 8" >> /tmp/userdata.log
   echo "  host -t SRV _kerberos._tcp.${REALM}"
 } >> "$SECRETS_FILE"
 
-echo "Step 9" >> /tmp/userdata.log
+echo "Step 9" >> /root/userdata.log
 
 # (Optional) Open UFW ports if UFW is enabled
 if ufw status | grep -q "Status: active"; then
@@ -181,7 +181,7 @@ if ufw status | grep -q "Status: active"; then
   ufw allow 3268/tcp; ufw allow 3269/tcp
 fi
 
-echo "Step 10" >> /tmp/userdata.log
+echo "Step 10" >> /root/userdata.log
 
 # Done. Reboot once to ensure all name resolution paths are clean (optional).
 reboot
