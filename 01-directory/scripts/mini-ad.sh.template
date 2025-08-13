@@ -33,6 +33,16 @@ sudo /tmp/aws/install --update
 rm -rf /tmp/aws /tmp/awscliv2.zip
 
 #--------------------------------------------------------------------
+# Signal that mini-AD initialization is not complete
+#--------------------------------------------------------------------
+
+aws ssm put-parameter \
+  --name "initialized_$DNS_ZONE" \
+  --type String \
+  --value "false" \
+  --overwrite
+
+#--------------------------------------------------------------------
 # Prepare secrets file with restrictive permissions
 #--------------------------------------------------------------------
 SECRETS_FILE="/root/ad-secrets.txt"
@@ -169,6 +179,17 @@ fi
   echo "  host -t SRV _ldap._tcp.${REALM}"
   echo "  host -t SRV _kerberos._tcp.${REALM}"
 } >> "$SECRETS_FILE"
+
+
+#--------------------------------------------------------------------
+# Signal that mini-AD initialization is not complete
+#--------------------------------------------------------------------
+
+aws ssm put-parameter \
+  --name "initialized_$DNS_ZONE" \
+  --type String \
+  --value "true" \
+  --overwrite
 
 #--------------------------------------------------------------------
 # Reboot to ensure all changes are applied cleanly
