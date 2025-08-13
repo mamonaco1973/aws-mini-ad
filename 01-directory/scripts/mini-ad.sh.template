@@ -20,6 +20,8 @@ systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 #--------------------------------------------------------------------
 # Install necessary packages for Active Directory Domain Controller
 #--------------------------------------------------------------------
+
+export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony unzip
 
@@ -73,7 +75,7 @@ echo "$IPV4  ${HOSTNAME_DC}.${DNS_ZONE} ${HOSTNAME_DC}" >> /etc/hosts
 #--------------------------------------------------------------------
 # Preconfigure Kerberos to prevent interactive prompts during install
 #--------------------------------------------------------------------
-export DEBIAN_FRONTEND=noninteractive
+
 debconf-set-selections <<< "krb5-config krb5-config/default_realm string ${REALM}"
 debconf-set-selections <<< "krb5-config krb5-config/kerberos_servers string"
 debconf-set-selections <<< "krb5-config krb5-config/admin_server string"
