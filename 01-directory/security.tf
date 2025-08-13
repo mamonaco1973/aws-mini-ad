@@ -1,9 +1,16 @@
+# ==================================================================================================
+# Security Group: mini-ad-sg
+# Purpose: Allow all required ports for a Samba-based Active Directory Domain Controller.
+# NOTE: Currently open to all IPv4 (0.0.0.0/0) for simplicity — secure this in production.
+# ==================================================================================================
 resource "aws_security_group" "ad_sg" {
   name        = "mini-ad-sg"
   description = "Security group for mini Active Directory services (open to all IPv4)"
   vpc_id      = aws_vpc.ad-vpc.id
 
-  # DNS
+  # -----------------------------------
+  # DNS (TCP/UDP 53) – name resolution for clients and AD replication
+  # -----------------------------------
   ingress {
     from_port   = 53
     to_port     = 53
@@ -17,7 +24,9 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Kerberos
+  # -----------------------------------
+  # Kerberos Authentication (TCP/UDP 88)
+  # -----------------------------------
   ingress {
     from_port   = 88
     to_port     = 88
@@ -31,7 +40,9 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # LDAP
+  # -----------------------------------
+  # LDAP (TCP/UDP 389) – directory queries & updates
+  # -----------------------------------
   ingress {
     from_port   = 389
     to_port     = 389
@@ -45,7 +56,9 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # SMB
+  # -----------------------------------
+  # SMB/CIFS file sharing (TCP 445) – required for AD SYSVOL & NETLOGON shares
+  # -----------------------------------
   ingress {
     from_port   = 445
     to_port     = 445
@@ -53,7 +66,9 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Kerberos change/set password
+  # -----------------------------------
+  # Kerberos Change/Set Password (TCP/UDP 464)
+  # -----------------------------------
   ingress {
     from_port   = 464
     to_port     = 464
@@ -67,7 +82,9 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # RPC Endpoint Mapper
+  # -----------------------------------
+  # RPC Endpoint Mapper (TCP 135) – locates RPC services
+  # -----------------------------------
   ingress {
     from_port   = 135
     to_port     = 135
@@ -75,16 +92,19 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # HTTPS for SSM
-
+  # -----------------------------------
+  # HTTPS (TCP 443) – required for AWS SSM connectivity
+  # -----------------------------------
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
-  # LDAP over SSL
+
+  # -----------------------------------
+  # LDAP over SSL (TCP 636) – secure directory queries
+  # -----------------------------------
   ingress {
     from_port   = 636
     to_port     = 636
@@ -92,7 +112,9 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Global Catalog
+  # -----------------------------------
+  # Global Catalog (TCP 3268/3269) – forest-wide directory searches
+  # -----------------------------------
   ingress {
     from_port   = 3268
     to_port     = 3268
@@ -106,7 +128,9 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Ephemeral RPC ports
+  # -----------------------------------
+  # Ephemeral RPC Ports (TCP 49152–65535) – dynamic RPC communications
+  # -----------------------------------
   ingress {
     from_port   = 49152
     to_port     = 65535
@@ -114,7 +138,9 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # NTP
+  # -----------------------------------
+  # NTP (UDP 123) – time synchronization
+  # -----------------------------------
   ingress {
     from_port   = 123
     to_port     = 123
@@ -122,7 +148,9 @@ resource "aws_security_group" "ad_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow all outbound
+  # -----------------------------------
+  # Allow all outbound traffic (full egress)
+  # -----------------------------------
   egress {
     from_port   = 0
     to_port     = 0
