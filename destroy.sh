@@ -21,6 +21,8 @@ aws secretsmanager delete-secret --secret-id "jsmith_ad_credentials" --force-del
 aws secretsmanager delete-secret --secret-id "edavis_ad_credentials" --force-delete-without-recovery
 aws secretsmanager delete-secret --secret-id "rpatel_ad_credentials" --force-delete-without-recovery
 aws secretsmanager delete-secret --secret-id "admin_ad_credentials" --force-delete-without-recovery
+aws ssm delete-parameter --name "initialized_mcloud.mikecloud.com"
+
 
 cd 01-directory
 
