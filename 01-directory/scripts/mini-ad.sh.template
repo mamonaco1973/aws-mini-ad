@@ -1,4 +1,12 @@
 #!/bin/bash
+#--------------------------------------------------------------------
+# Wait for NAT gateway to be ready.
+#--------------------------------------------------------------------
+
+until curl -s --head https://archive.ubuntu.com/ >/dev/null; do
+  echo "WARNING: Waiting for internet via NAT..." >> /root/userdata.log
+  sleep 5
+done
 
 #--------------------------------------------------------------------
 # Load configuration variables from environment
@@ -22,8 +30,8 @@ systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 #--------------------------------------------------------------------
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get update >> /root/apt-get.log 2>&1
-apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony unzip >> /root/apt-get.log 2>&1
+apt-get update >> /root/userdata.log 2>&1
+apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony unzip >> /root/userdata.log 2>&1
 
 #--------------------------------------------------------------------
 # Install AWS CLI
@@ -31,7 +39,7 @@ apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony un
 
 curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
 unzip -q /tmp/awscliv2.zip -d /tmp
-sudo /tmp/aws/install --update >> /root/apt-get.log 2>&1
+sudo /tmp/aws/install --update >> /root/userdata.log 2>&1
 rm -rf /tmp/aws /tmp/awscliv2.zip
 
 #--------------------------------------------------------------------
