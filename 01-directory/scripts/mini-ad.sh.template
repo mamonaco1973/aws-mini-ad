@@ -1,5 +1,16 @@
 #!/bin/bash 
 
+apt-get update
+apt install -y apache2
+
+# Signal that the domain controller is not ready yet
+
+sudo tee /var/www/html/index.html > /dev/null <<EOF
+false
+EOF
+
+systemctl restart apache2
+
 # Make sure the SSM Agent is installed and running
 
 sudo snap install amazon-ssm-agent --classic
@@ -44,7 +55,6 @@ echo "krb5-config krb5-config/default_realm string ${REALM}" | debconf-set-selec
 echo "krb5-config krb5-config/kerberos_servers string" | debconf-set-selections
 echo "krb5-config krb5-config/admin_server string" | debconf-set-selections
 
-apt-get update
 apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony
 
 echo "Step 3" >> /root/userdata.log
@@ -182,6 +192,12 @@ if ufw status | grep -q "Status: active"; then
 fi
 
 echo "Step 10" >> /root/userdata.log
+
+# Signal that the domain controller is ready
+
+sudo tee /var/www/html/index.html > /dev/null <<EOF
+false
+EOF
 
 # Done. Reboot once to ensure all name resolution paths are clean (optional).
 reboot
