@@ -99,6 +99,8 @@ if [ ! -f /var/lib/samba/private/sam.ldb ]; then
   systemctl restart samba-ad-dc
 fi
 
+systemctl stop systemd-resolved || true
+systemctl disable systemd-resolved || true
 
 echo "Step 6.2" >> /tmp/userdata.log
 
