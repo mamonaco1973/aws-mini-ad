@@ -38,13 +38,6 @@ resource "aws_iam_policy" "secrets_policy" {
           aws_secretsmanager_secret.rpatel_secret.arn,
           aws_secretsmanager_secret.akumar_secret.arn
         ]
-      },
-
-      # Allow EC2 instances to pass the SSM role to other AWS services
-      {
-        Effect   = "Allow"
-        Action   = "iam:PassRole"
-        Resource = "${aws_iam_role.ec2_ssm_role.arn}" # Reference to the SSM role ARN
       }
     ]
   })
