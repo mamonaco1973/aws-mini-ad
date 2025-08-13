@@ -43,7 +43,7 @@ hostnamectl set-hostname "$HOSTNAME_DC"
 #--------------------------------------------------------------------
 IPV4=$(hostname -I | awk '{print $1}')
 sed -i "/\b${HOSTNAME_DC}\b/d" /etc/hosts || true
-echo "${IPV4}  ${HOSTNAME_DC}.${DNS_ZONE} ${HOSTNAME_DC}" >> /etc/hosts
+echo "$IPV4  ${HOSTNAME_DC}.${DNS_ZONE} ${HOSTNAME_DC}" >> /etc/hosts
 
 #--------------------------------------------------------------------
 # Preconfigure Kerberos to prevent interactive prompts during install
