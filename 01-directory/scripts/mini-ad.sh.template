@@ -7,16 +7,6 @@ systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
 systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 
 #--------------------------------------------------------------------
-# Wait for NAT gateway to be ready - AWS Specific
-#--------------------------------------------------------------------
-
-until curl -s --head https://archive.ubuntu.com/ >/dev/null; do
-  echo "WARNING: Waiting for internet to become available..." >> /root/userdata.log
-  sleep 5
-done
-echo "NOTE: Internet is available." >> /root/userdata.log
-
-#--------------------------------------------------------------------
 # Load configuration variables from environment
 #--------------------------------------------------------------------
 REALM="${REALM}"
