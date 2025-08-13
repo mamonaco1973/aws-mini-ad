@@ -182,28 +182,31 @@ fi
 } >> "$SECRETS_FILE"
 
 #--------------------------------------------------------------------
-# Create some example groups and users
+# Create some example groups and users - suitable for use with linux
+# and windows concurrently.
 #--------------------------------------------------------------------
 
-# Base gidNumber for the primary group
+# Base gidNumber for the first group
 BASE_GID=10001
 
-# Starting point for uidNumber allocation
-UID_COUNTER=10000
+# Create groups if they don't exist, incrementing gidNumber for each new one
+CURRENT_GID=$BASE_GID
 
-# Create groups if they don't exist
 for group in "mcloud-users" "us" "india" "linux-admins"; do
     if ! samba-tool group show "$group" >/dev/null 2>&1; then
-        echo "Creating group: $group"
-        samba-tool group add "$group" --nis-domain="${NETBIOS}" \
-            --gid-number="$BASE_GID"
+        echo "Creating group: $group (gidNumber=$CURRENT_GID)"
+        samba-tool group add "$group" \
+            --nis-domain="${NETBIOS}" \
+            --gid-number="$CURRENT_GID"
+        ((CURRENT_GID++)) >> /root/ad_group_attributes.log
     fi
 done
 
-# ---------------------------
+#--------------------------------------------------------------------
 # Function: get_secret_password
 # Reads a secret from AWS Secrets Manager
-# ---------------------------
+#--------------------------------------------------------------------
+
 get_secret_password() {
     local secret_id="$1"
     aws secretsmanager get-secret-value \
@@ -212,11 +215,128 @@ get_secret_password() {
         --output text | jq -r .password
 }
 
-# ---------------------------
-# Boot-time counters
-# ---------------------------
-BASE_GID=10001
-UID_COUNTER=10000
+#---------------------------------------------------------------------------------
+# Function: create_ad_user
+# Purpose : Creates an Active Directory user in Samba 4 and 
+#           configures UNIX (RFC2307) attributes.
+#
+# Arguments:
+#   $1  - USERNAME       (e.g., jsmith)
+#   $2  - GIVENNAME      (First name, e.g., John)
+#   $3  - SURNAME        (Last name, e.g., Smith)
+#   $4  - DISPLAYNAME    (Full display name, e.g., "John Smith")
+#   $5  - EMAIL          (User email address, e.g., jsmith@example.com)
+#   $6  - PASSWORD       (User password)
+#   $7  - UID_NUMBER     (Unique numeric UID for UNIX systems)
+#   $8  - GID_NUMBER     (Primary group GID for UNIX systems)
+#   $9  - NIS_DOMAIN     (NIS/UNIX domain name, usually NETBIOS name in uppercase)
+#   $10 - PRIMARY_GROUP  (Name of the primary AD group)
+#
+# Notes:
+#   - Adds user to the specified PRIMARY_GROUP.
+#   - Directly sets RFC2307 attributes in LDAP (uid, uidNumber, gidNumber, etc.).
+#   - Ensures the login shell and home directory are set for UNIX access.
+#-----------------------------------------------------------------------------------
+
+create_ad_user() {
+    local USERNAME="$1"
+    local GIVENNAME="$2"
+    local SURNAME="$3"
+    local DISPLAYNAME="$4"
+    local EMAIL="$5"
+    local PASSWORD="$6"
+    local UID_NUMBER="$7"
+    local GID_NUMBER="$8"
+    local NIS_DOMAIN="$9"
+    local PRIMARY_GROUP="${10}"
+
+    # 1. Create the user
+    samba-tool user create "$USERNAME" "$PASSWORD" \
+        --given-name="$GIVENNAME" \
+        --surname="$SURNAME" \
+        --mail-address="$EMAIL" \
+        --description="$DISPLAYNAME"
+
+    # 2. Add to primary group
+    samba-tool group addmembers "$PRIMARY_GROUP" "$USERNAME"
+
+    # 3. Set Unix attributes (including uid and gid) directly in LDAP
+    ldbmodify -H /var/lib/samba/private/sam.ldb <<EOF
+dn: CN=$DISPLAYNAME,CN=Users,DC=mcloud,DC=mikecloud,DC=com
+changetype: modify
+add: objectClass
+objectClass: posixAccount
+-
+replace: uid
+uid: $USERNAME
+-
+replace: uidNumber
+uidNumber: $UID_NUMBER
+-
+replace: gidNumber
+gidNumber: $GID_NUMBER
+-
+replace: loginShell
+loginShell: /bin/bash
+-
+replace: unixHomeDirectory
+unixHomeDirectory: /home/$USERNAME
+-
+replace: msSFU30NisDomain
+msSFU30NisDomain: $NIS_DOMAIN
+EOF
+
+    # 4. Verify attributes
+    samba-tool user show "$USERNAME" | egrep "uid:|uidNumber|gidNumber|loginShell|unixHomeDirectory" >> /root/ad_user_attributes.log
+}
+
+create_ad_user \
+    "jsmith" \
+    "John" \
+    "Smith" \
+    "John Smith" \
+    "jsmith@${DNS_ZONE}" \
+    "$(get_secret_password jsmith_ad_credentials)" \
+    "10001" \
+    "10001" \
+    "${NETBIOS}" \
+    "mcloud-users"
+
+create_ad_user \
+    "edavis" \
+    "Emily" \
+    "Davis" \
+    "Emily Davis" \
+    "edavis@${DNS_ZONE}" \
+    "$(get_secret_password edavis_ad_credentials)" \
+    "10002" \
+    "10001" \
+    "${NETBIOS}" \
+    "mcloud-users"
+
+create_ad_user \
+    "rpatel" \
+    "Raj" \
+    "Patel" \
+    "Raj Patel" \
+    "rpatel@${DNS_ZONE}" \
+    "$(get_secret_password rpatel_ad_credentials)" \
+    "10003" \
+    "10001" \
+    "${NETBIOS}" \
+    "mcloud-users"
+
+create_ad_user \
+    "akumar" \
+    "Amit" \
+    "Kumar" \
+    "Amit Kumar" \
+    "akumar@${DNS_ZONE}" \
+    "$(get_secret_password akumar_ad_credentials)" \
+    "10004" \
+    "10001" \
+    "${NETBIOS}" \
+    "mcloud-users"
 
 #--------------------------------------------------------------------
 # Signal that mini-AD initialization iscomplete
