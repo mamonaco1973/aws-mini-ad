@@ -115,30 +115,5 @@ sudo systemctl restart ssh
 sudo echo "%linux-admins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/10-linux-admins
 
 # ---------------------------------------------------------------------------------
-# Section 7: Clean Up Permissions
-# ---------------------------------------------------------------------------------
-
-# Retrieve the instance ID using the EC2 metadata service.
-instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-
-# Generate a token for accessing the EC2 metadata service (required for IMDSv2).
-TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
-    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-
-# Retrieve the instance ID again using the token for IMDSv2 compatibility.
-instance_id=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
-    http://169.254.169.254/latest/meta-data/instance-id)
-
-# Retrieve the IAM instance profile association ID for the current instance.
-association_id=$(aws ec2 describe-iam-instance-profile-associations \
-    --filters "Name=instance-id,Values=$instance_id" \
-    --query "IamInstanceProfileAssociations[0].AssociationId" --output text)
-
-# Replace the current IAM instance profile with a new one (e.g., "EC2SSMProfile").
-profileName="EC2SSMProfile"
-aws ec2 replace-iam-instance-profile-association \
-    --iam-instance-profile Name=$profileName --association-id $association_id
-
-# ---------------------------------------------------------------------------------
 # End of Script
 # ---------------------------------------------------------------------------------

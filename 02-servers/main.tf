@@ -4,47 +4,21 @@ provider "aws" {
   region = "us-east-2"
 }
 
-# Fetch AWS Secrets Manager secrets for different Active Directory users
+# Fetch AWS Secrets Manager secrets for the AD admin user
 # These secrets store AD credentials for authentication purposes
 
-data "aws_secretsmanager_secret" "rpatel_secret" {
-  name = "rpatel_ad_credentials" # Secret name in AWS Secrets Manager
-}
-
-data "aws_secretsmanager_secret" "edavis_secret" {
-  name = "edavis_ad_credentials" # Secret name in AWS Secrets Manager
-}
 
 data "aws_secretsmanager_secret" "admin_secret" {
   name = "admin_ad_credentials" # Secret name for the admin user in AWS Secrets Manager
 }
 
-data "aws_secretsmanager_secret" "jsmith_secret" {
-  name = "jsmith_ad_credentials" # Secret name in AWS Secrets Manager
-}
-
-data "aws_secretsmanager_secret" "akumar_secret" {
-  name = "akumar_ad_credentials" # Secret name in AWS Secrets Manager
-}
-
-# Retrieve information about a specific AWS subnet using a tag-based filter
-# This subnet will be used for AD services deployment
-
-data "aws_subnet" "ad_subnet_1" {
+data "aws_subnet" "vm_subnet" {
   filter {
     name   = "tag:Name" # Match based on the 'Name' tag
-    values = ["ad-subnet-1"] # Look for a subnet tagged as "ad-subnet-1"
+    values = ["vm-subnet"] # Look for a subnet tagged as "ad-subnet-1"
   }
 }
 
-# Retrieve information about another AWS subnet for redundancy or HA
-
-data "aws_subnet" "ad_subnet_2" {
-  filter {
-    name   = "tag:Name"
-    values = ["ad-subnet-2"] # Look for a subnet tagged as "ad-subnet-2"
-  }
-}
 
 # Retrieve details of the AWS VPC where Active Directory components will be deployed
 # Uses a tag-based filter to locate the correct VPC
@@ -82,10 +56,3 @@ data "aws_ami" "windows_ami" {
   }
 }
 
-# # Define an EC2 key pair to allow SSH access to instances
-# # The public key is read from an existing file
-
-# resource "aws_key_pair" "ec2_key_pair" {
-#   key_name   = "ec2-key-pair"           # Name of the key pair in AWS
-#   public_key = file("./key.pem.pub")    # Read the public key from a local file
-# }

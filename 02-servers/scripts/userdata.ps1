@@ -107,21 +107,6 @@ Create-ADUserFromSecret "akumar_ad_credentials" "Amit" "Kumar" "Amit Kumar" "aku
 Add-LocalGroupMember -Group "Remote Desktop Users" -Member "mcloud-users"
 
 # ------------------------------------------------------------
-# Retrieve AWS Metadata and Modify IAM Profile
-# ------------------------------------------------------------
-
-# Retrieve the instance ID using AWS IMDSv2 for security
-$token = Invoke-RestMethod -Method Put -Uri "http://169.254.169.254/latest/api/token" -Headers @{ "X-aws-ec2-metadata-token-ttl-seconds" = "21600" }
-$instanceId = Invoke-RestMethod -Uri "http://169.254.169.254/latest/meta-data/instance-id" -Headers @{ "X-aws-ec2-metadata-token" = $token }
-
-# Fetch the IAM instance profile association ID for this instance
-$associationId = aws ec2 describe-iam-instance-profile-associations --filters "Name=instance-id,Values=$instanceId" --query "IamInstanceProfileAssociations[0].AssociationId" --output text
-
-# Assign a less privileged IAM role to the instance for security
-$profileName = "EC2SSMProfile"
-aws ec2 replace-iam-instance-profile-association --iam-instance-profile Name=$profileName --association-id $associationId
-
-# ------------------------------------------------------------
 # Final Reboot to Apply Changes
 # ------------------------------------------------------------
 
