@@ -1,68 +1,70 @@
-#!/bin/bash 
+#!/bin/bash
 
-apt-get update
-apt install -y apache2
+#--------------------------------------------------------------------
+# Ensure SSM Agent is installed and running for remote management
+#--------------------------------------------------------------------
+snap install amazon-ssm-agent --classic
+systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 
-# Signal that the domain controller is not ready yet
-
-sudo tee /var/www/html/index.html > /dev/null <<EOF
-false
-EOF
-
-systemctl restart apache2
-
-# Make sure the SSM Agent is installed and running
-
-sudo snap install amazon-ssm-agent --classic
-sudo systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
-sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
-systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service
-
-echo "Step 0" >> /root/userdata.log
-
+#--------------------------------------------------------------------
+# Load configuration variables from environment
+#--------------------------------------------------------------------
 REALM="${REALM}"
 DNS_ZONE="${DNS_ZONE}"
 NETBIOS="${NETBIOS}"
 HOSTNAME_DC="${HOSTNAME_DC}"
+ADMINISTRATOR_PASS="${ADMINISTRATOR_PASS}"
+ADMIN_USER_PASS="${ADMIN_USER_PASS}"
 
+#--------------------------------------------------------------------
+# Prepare secrets file with restrictive permissions
+#--------------------------------------------------------------------
 SECRETS_FILE="/root/ad-secrets.txt"
 mkdir -p /root
-touch "$SECRETS_FILE"
+: > "$SECRETS_FILE"
 chmod 600 "$SECRETS_FILE"
 
-# Preserve our hostname against cloud-init changes
+#--------------------------------------------------------------------
+# Prevent cloud-init from altering the hostname
+#--------------------------------------------------------------------
 mkdir -p /etc/cloud/cloud.cfg.d
-cat >/etc/cloud/cloud.cfg.d/99-preserve-hostname.cfg <<EOF
+cat > /etc/cloud/cloud.cfg.d/99-preserve-hostname.cfg <<EOF
 preserve_hostname: true
 EOF
 
-echo "Step 1" >> /root/userdata.log
-
+#--------------------------------------------------------------------
+# Set the appropriate hostname for the Domain Controller
+#--------------------------------------------------------------------
 hostnamectl set-hostname "$HOSTNAME_DC"
 
-# Grab primary private IP (DHCP expected on EC2)
+#--------------------------------------------------------------------
+# Determine the primary private IPv4 address and update /etc/hosts
+#--------------------------------------------------------------------
 IPV4=$(hostname -I | awk '{print $1}')
-# Clean old hosts entries and add ours
-sed -i "/\b$HOSTNAME_DC\b/d" /etc/hosts || true
-echo "$IPV4  ${HOSTNAME_DC}.${DNS_ZONE} ${HOSTNAME_DC}" >> /etc/hosts
+sed -i "/\b${HOSTNAME_DC}\b/d" /etc/hosts || true
+echo "${IPV4}  ${HOSTNAME_DC}.${DNS_ZONE} ${HOSTNAME_DC}" >> /etc/hosts
 
-echo "Step 2" >> /root/userdata.log
-
+#--------------------------------------------------------------------
+# Preconfigure Kerberos to prevent interactive prompts during install
+#--------------------------------------------------------------------
 export DEBIAN_FRONTEND=noninteractive
+debconf-set-selections <<< "krb5-config krb5-config/default_realm string ${REALM}"
+debconf-set-selections <<< "krb5-config krb5-config/kerberos_servers string"
+debconf-set-selections <<< "krb5-config krb5-config/admin_server string"
 
-# Preseed krb5-user so apt won’t prompt
-echo "krb5-config krb5-config/default_realm string ${REALM}" | debconf-set-selections
-echo "krb5-config krb5-config/kerberos_servers string" | debconf-set-selections
-echo "krb5-config krb5-config/admin_server string" | debconf-set-selections
-
+#--------------------------------------------------------------------
+# Install necessary packages for Active Directory Domain Controller
+#--------------------------------------------------------------------
+apt-get update
 apt-get install -y samba krb5-user winbind smbclient dnsutils acl attr chrony
 
-echo "Step 3" >> /root/userdata.log
-
-# Configure Chrony to use AWS Time Sync (169.254.169.123)
+#--------------------------------------------------------------------
+# Configure Chrony to sync with AWS Time Sync service
+#--------------------------------------------------------------------
 if ! grep -q "169.254.169.123" /etc/chrony/chrony.conf; then
   sed -i 's/^pool .*//g' /etc/chrony/chrony.conf || true
-  cat >>/etc/chrony/chrony.conf <<EOF
+  cat >> /etc/chrony/chrony.conf <<EOF
 server 169.254.169.123 prefer iburst
 makestep 1.0 3
 rtcsync
@@ -70,22 +72,17 @@ EOF
 fi
 systemctl enable --now chrony
 
-echo "Step 4" >> /root/userdata.log
-
-# Stop classic Samba daemons (we’ll run samba-ad-dc)
+#--------------------------------------------------------------------
+# Disable traditional Samba daemons to avoid conflicts with DC mode
+#--------------------------------------------------------------------
 systemctl stop smbd nmbd winbind || true
 systemctl disable smbd nmbd winbind || true
 
-# Generate strong passwords (or hardcode if you want)
-ADMINISTRATOR_PASS="${ADMINISTRATOR_PASS}"
-ADMIN_USER_PASS="${ADMIN_USER_PASS}"
-
-echo "Step 5" >> /root/userdata.log
-
-# Only provision if not already provisioned
+#--------------------------------------------------------------------
+# Provision the Domain Controller if not already provisioned
+#--------------------------------------------------------------------
 if [ ! -f /var/lib/samba/private/sam.ldb ]; then
   mv /etc/samba/smb.conf /etc/samba/smb.conf.bak 2>/dev/null || true
-
   samba-tool domain provision \
     --use-rfc2307 \
     --realm="${REALM}" \
@@ -95,67 +92,56 @@ if [ ! -f /var/lib/samba/private/sam.ldb ]; then
     --host-name="${HOSTNAME_DC}" \
     --adminpass="${ADMINISTRATOR_PASS}"
 
-  # Set AWS DNS forwarder for external lookups
-
-  sudo sed -i '/^\s*dns forwarder\s*=/d' /etc/samba/smb.conf
+  sed -i '/^\s*dns forwarder\s*=/d' /etc/samba/smb.conf
   sed -i '/^\[global\]/a dns forwarder = 169.254.169.253' /etc/samba/smb.conf
-
-  # Use Samba-generated Kerberos config
   cp /var/lib/samba/private/krb5.conf /etc/krb5.conf
 
-  echo "Step 6" >> /root/userdata.log
-
   systemctl enable samba-ad-dc
-
-  echo "Step 6.1" >> /root/userdata.log
-
   systemctl restart samba-ad-dc
 fi
 
+#--------------------------------------------------------------------
+# Disable systemd-resolved to manage DNS manually
+#--------------------------------------------------------------------
 systemctl stop systemd-resolved || true
 systemctl disable systemd-resolved || true
 
-echo "Step 6.2" >> /root/userdata.log
-
-# Point local resolver to self (and AWS resolver as fallback)
-# NOTE: For prototypes this is fine; for prod use proper resolved/netplan config.
+#--------------------------------------------------------------------
+# Configure /etc/resolv.conf with local resolver and fallback
+#--------------------------------------------------------------------
 if [ -L /etc/resolv.conf ]; then
   rm -f /etc/resolv.conf
 fi
-
-echo "Step 6.3" >> /root/userdata.log
-
-cat >/etc/resolv.conf <<EOF
+cat > /etc/resolv.conf <<EOF
 search ${DNS_ZONE}
 nameserver 127.0.0.1
 nameserver 169.254.169.253
 EOF
-
-
-echo "Step 6.4" >> /root/userdata.log
-
-# Prevent DHCP/agents from stomping on resolv.conf (prototype-friendly)
 chattr +i /etc/resolv.conf || true
 
-echo "Step 7" >> /root/userdata.log
-
-# Wait briefly for DC to settle
+#--------------------------------------------------------------------
+# Allow services to stabilize
+#--------------------------------------------------------------------
 sleep 5
 
-# Kerberos test ticket (Administrator)
-echo "${ADMINISTRATOR_PASS}" | kinit Administrator@${REALM} || true
+#--------------------------------------------------------------------
+# Validate Kerberos authentication for Administrator principal
+#--------------------------------------------------------------------
+kinit Administrator@${REALM} <<< "${ADMINISTRATOR_PASS}" || true
 klist || true
 kdestroy || true
 
-# Create your day-to-day admin: "Admin" and grant Domain Admins
+#--------------------------------------------------------------------
+# Create a day-to-day Admin user with Domain Admin privileges, if needed
+#--------------------------------------------------------------------
 if ! samba-tool user show Admin >/dev/null 2>&1; then
   samba-tool user create Admin "${ADMIN_USER_PASS}"
   samba-tool group addmembers "Domain Admins" Admin
 fi
 
-echo "Step 8" >> /root/userdata.log
-
-# Log important info
+#--------------------------------------------------------------------
+# Record provisioning details and credentials for reference
+#--------------------------------------------------------------------
 {
   echo "==== Mini-AD Provisioned ===="
   echo "Date: $(date -Is)"
@@ -163,7 +149,7 @@ echo "Step 8" >> /root/userdata.log
   echo "DNS Zone: ${DNS_ZONE}"
   echo "NetBIOS Domain: ${NETBIOS}"
   echo "DC Hostname: ${HOSTNAME_DC}"
-  echo "DC IP: $IPV4"
+  echo "DC IP: ${IPV4}"
   echo
   echo "Administrator password: ${ADMINISTRATOR_PASS}"
   echo "Admin (Domain Admins) password: ${ADMIN_USER_PASS}"
@@ -175,31 +161,7 @@ echo "Step 8" >> /root/userdata.log
   echo "  host -t SRV _kerberos._tcp.${REALM}"
 } >> "$SECRETS_FILE"
 
-echo "Step 9" >> /root/userdata.log
-
-# (Optional) Open UFW ports if UFW is enabled
-if ufw status | grep -q "Status: active"; then
-  ufw allow 53/tcp; ufw allow 53/udp
-  ufw allow 88/tcp; ufw allow 88/udp
-  ufw allow 123/udp
-  ufw allow 135/tcp
-  ufw allow 137/udp; ufw allow 138/udp
-  ufw allow 139/tcp
-  ufw allow 389/tcp; ufw allow 389/udp
-  ufw allow 445/tcp
-  ufw allow 464/tcp; ufw allow 464/udp
-  ufw allow 3268/tcp; ufw allow 3269/tcp
-fi
-
-echo "Step 10" >> /root/userdata.log
-
-# Signal that the domain controller is ready
-
-sudo tee /var/www/html/index.html > /dev/null <<EOF
-false
-EOF
-
-# Done. Reboot once to ensure all name resolution paths are clean (optional).
+#--------------------------------------------------------------------
+# Reboot to ensure all changes are applied cleanly
+#--------------------------------------------------------------------
 reboot
-
-
