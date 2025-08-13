@@ -182,7 +182,7 @@ fi
 
 
 #--------------------------------------------------------------------
-# Signal that mini-AD initialization is not complete
+# Signal that mini-AD initialization iscomplete
 #--------------------------------------------------------------------
 
 aws ssm put-parameter \
