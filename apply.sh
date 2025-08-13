@@ -18,7 +18,7 @@ aws ssm put-parameter \
   --name "initialized_$DNS_ZONE" \
   --type String \
   --value "false" \
-  --overwrite
+  --overwrite > /dev/null
 
 cd 01-directory
 
