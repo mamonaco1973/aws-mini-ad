@@ -1,6 +1,6 @@
-# AWS Directory Service
+# AWS Mini Active Directory
 
-This is Part 1 of the Series: [Deploying Active Directory in the Cloud](https://youtu.be/H5lKJPJBL5s)
+
 
 ## Introduction
 
@@ -16,7 +16,7 @@ In this video, we will demonstrate the deployment of **AWS Directory Service**, 
 
 This tutorial will help you understand **AWS Directory Service** and how to use it for **identity management in AWS environments**.
 
-![AWS diagram](aws-directory.png)
+![AWS diagram](aws-mini-directory.png)
 
 ## Prerequisites
 
