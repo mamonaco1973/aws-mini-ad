@@ -18,7 +18,7 @@ resource "aws_instance" "linux_ad_instance" {
   # Specifies the AWS subnet where the instance will be deployed.
   # The subnet is dynamically retrieved from a data source (ad_subnet_1).
 
-  subnet_id = data.aws_subnet.ad_subnet_1.id
+  subnet_id = data.aws_subnet.vm_subnet.id
 
   # SECURITY GROUPS
   # Applies two security groups:
