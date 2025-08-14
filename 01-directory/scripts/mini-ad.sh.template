@@ -288,10 +288,21 @@ EOF
     samba-tool user show "$USERNAME" | egrep "uid:|uidNumber|gidNumber|loginShell|unixHomeDirectory" >> /root/ad_user_attributes.log 2>&1
 }
 
+# Create sample domain users
+
 create_ad_user "jsmith" "John"   "Smith"  "$(get_secret_password jsmith_ad_credentials)" "10001" "10001" "mcloud-users"
 create_ad_user "edavis" "Emily"  "Davis"  "$(get_secret_password edavis_ad_credentials)" "10002" "10001" "mcloud-users"
 create_ad_user "rpatel" "Raj"    "Patel"  "$(get_secret_password rpatel_ad_credentials)" "10003" "10001" "mcloud-users"
 create_ad_user "akumar" "Amit"   "Kumar"  "$(get_secret_password akumar_ad_credentials)" "10004" "10001" "mcloud-users"
+
+# Assign users to groups
+
+samba-tool group addmembers "us"           "jsmith"  >> /root/ad_user_attributes.log 2>&1
+samba-tool group addmembers "linux-admins" "jsmith"  >> /root/ad_user_attributes.log 2>&1
+samba-tool group addmembers "us"           "edavis"  >> /root/ad_user_attributes.log 2>&1
+samba-tool group addmembers "india"        "rpatel"  >> /root/ad_user_attributes.log 2>&1
+samba-tool group addmembers "linux-admins" "rpatel"  >> /root/ad_user_attributes.log 2>&1
+samba-tool group addmembers "india"        "akumar"  >> /root/ad_user_attributes.log 2>&1
 
 #--------------------------------------------------------------------
 # Signal that mini-AD initialization iscomplete
