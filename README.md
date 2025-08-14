@@ -47,7 +47,7 @@ cd aws-mini-ad
 Run [check_env](check_env.sh) to validate your environment, then run [apply](apply.sh) to provision the infrastructure.
 
 ```bash
-develop-vm:~/aws-active-directory$ ./apply.sh
+develop-vm:~/aws-mini-ad$ ./apply.sh
 NOTE: Validating that required commands are found in your PATH.
 NOTE: aws is found in the current PATH.
 NOTE: terraform is found in the current PATH.
