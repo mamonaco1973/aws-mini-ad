@@ -197,8 +197,9 @@ for group in "mcloud-users" "us" "india" "linux-admins"; do
         echo "Creating group: $group (gidNumber=$CURRENT_GID)"
         samba-tool group add "$group" \
             --nis-domain="${NETBIOS}" \
-            --gid-number="$CURRENT_GID"
-        ((CURRENT_GID++)) >> /root/ad_group_attributes.log 2>&1
+            --gid-number="$CURRENT_GID" \
+            --description="Sample Group - $group" >> /root/ad_group_attributes.log 2>&1
+        ((CURRENT_GID++)) 
     fi
 done
 
@@ -253,7 +254,7 @@ create_ad_user() {
         --given-name="$GIVENNAME" \
         --surname="$SURNAME" \
         --mail-address="$EMAIL" \
-        --description="$DISPLAYNAME" >> /root/ad_user_attributes.log 2>&1
+        --description="Sample User - $DISPLAYNAME" >> /root/ad_user_attributes.log 2>&1
 
     # 2. Add to primary group
     samba-tool group addmembers "$PRIMARY_GROUP" "$USERNAME" >> /root/ad_user_attributes.log 2>&1
