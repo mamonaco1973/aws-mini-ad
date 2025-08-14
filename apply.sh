@@ -14,11 +14,13 @@ fi
 
 DNS_ZONE="mcloud.mikecloud.com"
 
-aws ssm put-parameter \
-  --name "initialized_$DNS_ZONE" \
-  --type String \
-  --value "false" \
-  --overwrite > /dev/null
+if ! aws ssm get-parameter --name "initialized_$DNS_ZONE" >/dev/null 2>&1; then
+  aws ssm put-parameter \
+    --name "initialized_$DNS_ZONE" \
+    --type String \
+    --value "false" \
+    --overwrite >/dev/null
+fi
 
 cd 01-directory
 
