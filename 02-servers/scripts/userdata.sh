@@ -1,5 +1,13 @@
 #!/bin/bash
 
+#--------------------------------------------------------------------
+# Ensure SSM Agent is installed and running for remote management
+#--------------------------------------------------------------------
+snap install amazon-ssm-agent --classic
+systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
+
+
 # This script automates the process of updating the OS, installing required packages,
 # joining an Active Directory (AD) domain, configuring system settings, and cleaning
 # up permissions.
