@@ -16,6 +16,7 @@ While the mini-AD deployment provides a functional and cost-effective Active Dir
 - **High Availability & Multi-AZ Deployment** – Managed AD automatically provisions redundant domain controllers across multiple Availability Zones for fault tolerance; mini-AD is typically a single instance.  
 - **Automated Backups & Snapshots** – Managed AD takes daily automated backups and enables point-in-time recovery; mini-AD requires manual backup configuration.  
 - **AWS Service Integration** – Deep integration with AWS services such as WorkSpaces, FSx for Windows, Amazon RDS for SQL Server, and QuickSight is preconfigured in Managed AD; mini-AD may require additional setup or may not support certain integrations.  
+- **Group Policy Objects (GPO) Support** – Managed AD provides full, highly compatible GPO support with automatic replication; mini-AD uses Samba 4 GPO support, which may be limited in features, compatibility, and lacks built-in multi-DC replication.
 - **Automatic Patching** – Managed AD automatically applies OS and directory service patches; mini-AD requires you to manually manage updates.  
 - **Scaling & Performance Management** – Managed AD can scale domain controllers automatically within AWS limits; mini-AD is fixed to the resources of your chosen EC2 instance type.  
 - **Kerberos Trusts with On-Prem AD** – Managed AD supports forest and domain trusts for hybrid integration; mini-AD setup for trusts is manual and more complex.  
