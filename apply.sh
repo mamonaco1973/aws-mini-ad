@@ -50,3 +50,8 @@ terraform apply -auto-approve
 
 cd .. 
 
+# Build Validation Output
+
+echo ""
+./validate.sh
+
