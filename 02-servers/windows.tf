@@ -21,7 +21,7 @@ resource "aws_instance" "windows_ad_instance" {
   # The subnet is dynamically retrieved from a data source (ad_subnet_2).
   # This determines whether the instance is public or private.
 
-  subnet_id = data.aws_subnet.vm_subnet.id
+  subnet_id = data.aws_subnet.vm_subnet_1.id
 
   # SECURITY GROUPS
   # Applies two security groups:

@@ -12,10 +12,17 @@ data "aws_secretsmanager_secret" "admin_secret" {
   name = "admin_ad_credentials" # Secret name for the admin user in AWS Secrets Manager
 }
 
-data "aws_subnet" "vm_subnet" {
+data "aws_subnet" "vm_subnet_1" {
   filter {
     name   = "tag:Name"    # Match based on the 'Name' tag
-    values = ["vm-subnet"] # Look for a subnet tagged as "ad-subnet-1"
+    values = ["vm-subnet-1"] # Look for a subnet tagged as "vm-subnet-1"
+  }
+}
+
+data "aws_subnet" "vm_subnet_2" {
+  filter {
+    name   = "tag:Name"    # Match based on the 'Name' tag
+    values = ["vm-subnet-2"] # Look for a subnet tagged as "vm-subnet-2"
   }
 }
 
