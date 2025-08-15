@@ -3,7 +3,7 @@
 
 # Phase 1 of Destroy - delete EC2 instances
 
-export AWS_DEFAULT_REGION=us-east-2  # Required so AWS CLI/Terraform know where to operate
+export AWS_DEFAULT_REGION=us-east-1  # Required so AWS CLI/Terraform know where to operate
 
 cd 02-servers
 
