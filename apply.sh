@@ -1,57 +1,93 @@
 #!/bin/bash
+# --------------------------------------------------------------------------------------------------
+# Description:
+# This script provisions infrastructure in two main phases:
+#   1. Deploys the Active Directory (AD) instance and ensures it is fully initialized.
+#   2. Deploys additional EC2 servers that depend on the AD environment.
+#
+# Key Features:
+#   - Validates the environment with a pre-check script before provisioning.
+#   - Creates an SSM Parameter to track AD initialization status.
+#   - Polls SSM Parameter Store until the AD Domain Controller signals readiness.
+#   - Applies Terraform modules for both AD and server layers.
+#   - Runs a validation script at the end to confirm the build.
+#
+# REQUIREMENTS:
+#   - AWS CLI configured with appropriate credentials/permissions.
+#   - Terraform installed and accessible in PATH.
+#   - `check_env.sh` script present in the current directory.
+#   - `validate.sh` script present in the current directory.
+# --------------------------------------------------------------------------------------------------
 
-# Check to make sure we can build
+# --------------------------------------------------------------------------------------------------
+# Configuration
+# --------------------------------------------------------------------------------------------------
+export AWS_DEFAULT_REGION="us-east-1"   # AWS region for all resources
+DNS_ZONE="mcloud.mikecloud.com"         # Active Directory DNS zone / domain
 
-export AWS_DEFAULT_REGION=us-east-1  # Required so AWS CLI/Terraform know where to operate
-
+# --------------------------------------------------------------------------------------------------
+# Environment Pre-Check
+# --------------------------------------------------------------------------------------------------
+echo "NOTE: Running environment validation..."
 ./check_env.sh
 if [ $? -ne 0 ]; then
   echo "ERROR: Environment check failed. Exiting."
   exit 1
 fi
 
-# Build Phase 1 - Create the AD instance
+# --------------------------------------------------------------------------------------------------
+# Phase 1: Build AD Instance
+# --------------------------------------------------------------------------------------------------
+echo "NOTE: Building Active Directory instance..."
 
-DNS_ZONE="mcloud.mikecloud.com"
-
-if ! aws ssm get-parameter --name "initialized_$DNS_ZONE" >/dev/null 2>&1; then
+# Ensure initialization parameter exists in SSM Parameter Store
+if ! aws ssm get-parameter --name "initialized_${DNS_ZONE}" >/dev/null 2>&1; then
   aws ssm put-parameter \
-    --name "initialized_$DNS_ZONE" \
+    --name "initialized_${DNS_ZONE}" \
     --type String \
     --value "false" \
     --overwrite >/dev/null
 fi
 
-cd 01-directory
+cd 01-directory || { echo "ERROR: Directory 01-directory not found"; exit 1; }
 
 terraform init
 terraform apply -auto-approve
 
-cd ..
+cd .. || exit
 
-# Poll SSM parameter and wait for DC controller to fully initialize before we start using it
-
+# --------------------------------------------------------------------------------------------------
+# Wait for AD Initialization
+# --------------------------------------------------------------------------------------------------
+echo "NOTE: Waiting for Active Directory Domain Controller initialization..."
 while true; do
-  STATUS=$(aws ssm get-parameter --name "initialized_$DNS_ZONE" --query "Parameter.Value" --output text)
+  STATUS=$(aws ssm get-parameter \
+    --name "initialized_${DNS_ZONE}" \
+    --query "Parameter.Value" \
+    --output text)
   if [ "$STATUS" == "true" ]; then
     echo "NOTE: Mini-AD controller is fully initialized."
     break
   fi
-  echo "WARNING: Waiting for Mini-AD controller initialization..."
+  echo "WARN: Mini-AD controller not ready yet. Retrying in 30s..."
   sleep 30
 done
 
-# Build Phase 2 - Create EC2 Instances
-
-cd 02-servers
+# --------------------------------------------------------------------------------------------------
+# Phase 2: Build EC2 Server Instances
+# --------------------------------------------------------------------------------------------------
+echo "NOTE: Building EC2 server instances..."
+cd 02-servers || { echo "ERROR: Directory 02-servers not found"; exit 1; }
 
 terraform init
 terraform apply -auto-approve
 
-cd .. 
+cd .. || exit
 
-# Build Validation Output
-
-echo ""
+# --------------------------------------------------------------------------------------------------
+# Build Validation
+# --------------------------------------------------------------------------------------------------
+echo "NOTE: Running build validation..."
 ./validate.sh
 
+echo "NOTE: Infrastructure build complete."
