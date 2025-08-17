@@ -13,17 +13,19 @@ This solution is ideal for labs, demos, and development environments where Activ
 
 While the mini-AD deployment provides a functional and cost-effective Active Directory environment for labs, demos, and development, it does not include many of the advanced features found in AWS Managed Microsoft AD. Below is a list of key capabilities that are missing or require significant manual setup when using mini-AD compared to the managed service:
 
-- **High Availability & Multi-AZ Deployment** – Managed AD automatically provisions redundant domain controllers across multiple Availability Zones for fault tolerance; mini-AD is typically a single instance.  
-- **Automated Backups & Snapshots** – Managed AD takes daily automated backups and enables point-in-time recovery; mini-AD requires manual backup configuration.  
-- **AWS Service Integration** – Deep integration with AWS services such as WorkSpaces, FSx for Windows, Amazon RDS for SQL Server, and QuickSight is preconfigured in Managed AD; mini-AD may require additional setup or may not support certain integrations.  
-- **Group Policy Objects (GPO) Support** – Managed AD provides full, highly compatible GPO support with automatic replication; mini-AD uses Samba 4 GPO support, which may be limited in features, compatibility, and lacks built-in multi-DC replication.
-- **PowerShell Active Directory Cmdlet Support** – Managed AD supports full use of AD PowerShell cmdlets (e.g., New-ADUser, New-ADGroup); mini-AD lacks native AD Web Services, so these cmdlets may not function. 
-- **Automatic Patching** – Managed AD automatically applies OS and directory service patches; mini-AD requires you to manually manage updates.  
-- **Scaling & Performance Management** – Managed AD can scale domain controllers automatically within AWS limits; mini-AD is fixed to the resources of your chosen EC2 instance type.  
-- **Kerberos Trusts with On-Prem AD** – Managed AD supports forest and domain trusts for hybrid integration; mini-AD setup for trusts is manual and more complex.  
-- **Security Hardening & Compliance** – Managed AD is pre-hardened to meet AWS security and compliance standards (SOC, HIPAA, FedRAMP); mini-AD security depends entirely on your configuration.  
-- **24/7 AWS Support for Directory Service** – Managed AD comes with AWS-managed support for the directory infrastructure; mini-AD puts all operational responsibility on you.  
-- **Monitoring & Metrics** – Managed AD includes CloudWatch metrics and event logging out of the box; mini-AD monitoring must be manually set up.  
+### Issues Related to PaaS vs IaaS (Operational & Platform-Level)
+- **High Availability & Multi-AZ Deployment** – Managed AD provisions redundant DCs automatically; mini-AD is typically a single EC2 instance.  
+- **Automated Backups & Snapshots** – Managed AD handles daily backups and point-in-time recovery; mini-AD requires manual backup configuration.  
+- **Automatic Patching** – Managed AD auto-patches OS and AD services; mini-AD requires manual updates.  .  
+- **Security Hardening & Compliance** – Managed AD is pre-hardened for AWS compliance; mini-AD security depends entirely on your setup.  
+- **24/7 AWS Support for Directory Service** – Managed AD includes AWS support; mini-AD requires you to support everything yourself.  
+- **Monitoring & Metrics** – Managed AD integrates CloudWatch metrics/logging; mini-AD needs manual monitoring configuration.  
+
+### True Functional Differences (AD Feature Gaps & Compatibility)
+- **AWS Service Integration** – Managed AD has built-in integration with WorkSpaces, FSx, RDS SQL Server, QuickSight, etc.; mini-AD may lack or require extra setup.  
+- **Group Policy Objects (GPO) Support** – Managed AD provides full, replicated GPO support; Samba GPO support is limited and lacks automatic replication.  
+- **PowerShell Active Directory Cmdlet Support** – Managed AD supports full AD PowerShell cmdlets; Samba-based mini-AD lacks native AD Web Services, so cmdlets often don’t work.  
+- **Kerberos Trusts with On-Prem AD** – Managed AD supports forest/domain trusts; mini-AD requires complex manual configuration.  
 
 ## Prerequisites
 
