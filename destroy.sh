@@ -40,9 +40,6 @@ aws secretsmanager delete-secret --secret-id "edavis_ad_credentials" --force-del
 aws secretsmanager delete-secret --secret-id "rpatel_ad_credentials" --force-delete-without-recovery
 aws secretsmanager delete-secret --secret-id "admin_ad_credentials" --force-delete-without-recovery
 
-# Remove initialization parameter for AD
-aws ssm delete-parameter --name "initialized_mcloud.mikecloud.com"
-
 # Destroy AD instance via Terraform
 echo "NOTE: Destroying AD instance..."
 cd 01-directory || { echo "ERROR: Directory 01-directory not found"; exit 1; }
