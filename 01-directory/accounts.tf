@@ -47,7 +47,7 @@ resource "aws_secretsmanager_secret" "jsmith_secret" {
 resource "aws_secretsmanager_secret_version" "jsmith_secret_version" {
   secret_id = aws_secretsmanager_secret.jsmith_secret.id
   secret_string = jsonencode({
-    username = "MCLOUD\\jsmith"
+    username = "${var.netbios}\\jsmith"
     password = random_password.jsmith_password.result
   })
 }
@@ -75,7 +75,7 @@ resource "aws_secretsmanager_secret" "edavis_secret" {
 resource "aws_secretsmanager_secret_version" "edavis_secret_version" {
   secret_id = aws_secretsmanager_secret.edavis_secret.id
   secret_string = jsonencode({
-    username = "MCLOUD\\edavis"
+    username = "${var.netbios}\\edavis"
     password = random_password.edavis_password.result
   })
 }
@@ -103,7 +103,7 @@ resource "aws_secretsmanager_secret" "rpatel_secret" {
 resource "aws_secretsmanager_secret_version" "rpatel_secret_version" {
   secret_id = aws_secretsmanager_secret.rpatel_secret.id
   secret_string = jsonencode({
-    username = "MCLOUD\\rpatel"
+    username = "${var.netbios}\\rpatel"
     password = random_password.rpatel_password.result
   })
 }
@@ -131,7 +131,7 @@ resource "aws_secretsmanager_secret" "akumar_secret" {
 resource "aws_secretsmanager_secret_version" "akumar_secret_version" {
   secret_id = aws_secretsmanager_secret.akumar_secret.id
   secret_string = jsonencode({
-    username = "MCLOUD\\akumar"
+    username = "${var.netbios}\\akumar"
     password = random_password.akumar_password.result
   })
 }

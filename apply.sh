@@ -40,38 +40,12 @@ fi
 # --------------------------------------------------------------------------------------------------
 echo "NOTE: Building Active Directory instance..."
 
-# Ensure initialization parameter exists in SSM Parameter Store
-if ! aws ssm get-parameter --name "initialized_${DNS_ZONE}" >/dev/null 2>&1; then
-  aws ssm put-parameter \
-    --name "initialized_${DNS_ZONE}" \
-    --type String \
-    --value "false" \
-    --overwrite >/dev/null
-fi
-
 cd 01-directory || { echo "ERROR: Directory 01-directory not found"; exit 1; }
 
 terraform init
 terraform apply -auto-approve
 
 cd .. || exit
-
-# --------------------------------------------------------------------------------------------------
-# Wait for AD Initialization
-# --------------------------------------------------------------------------------------------------
-echo "NOTE: Waiting for Active Directory Domain Controller initialization..."
-while true; do
-  STATUS=$(aws ssm get-parameter \
-    --name "initialized_${DNS_ZONE}" \
-    --query "Parameter.Value" \
-    --output text)
-  if [ "$STATUS" == "true" ]; then
-    echo "NOTE: Mini-AD controller is fully initialized."
-    break
-  fi
-  echo "WARN: Mini-AD controller not ready yet. Retrying in 30s..."
-  sleep 30
-done
 
 # --------------------------------------------------------------------------------------------------
 # Phase 2: Build EC2 Server Instances

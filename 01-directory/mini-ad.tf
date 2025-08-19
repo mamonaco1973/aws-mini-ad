@@ -45,6 +45,7 @@ resource "aws_instance" "mini_ad_dc_instance" {
     NETBIOS            = var.netbios
     ADMINISTRATOR_PASS = random_password.admin_password.result
     ADMIN_USER_PASS    = random_password.admin_password.result
+    USERS_JSON         = local.users_json
   })
 
   tags = {
@@ -90,3 +91,24 @@ resource "aws_vpc_dhcp_options_association" "mini_ad_dns_assoc" {
   dhcp_options_id = aws_vpc_dhcp_options.mini_ad_dns.id
   depends_on      = [time_sleep.wait_for_mini_ad]
 }
+
+
+# -------------------------------------------------------------------
+# Local variable: users_json
+# - Renders a JSON template file (`users.json.template`)
+# - Injects dynamically generated random passwords into the template
+# - Produces a single JSON blob you can pass into VM bootstrap
+# -------------------------------------------------------------------
+locals {
+  users_json = templatefile("./scripts/users.json.template", {
+    USER_BASE_DN    = var.user_base_dn                       # User base DN for LDAP
+    DNS_ZONE        = var.dns_zone                           # DNS zone (e.g., mcloud.mikecloud.com)
+    REALM           = var.realm                              # Kerberos realm
+    NETBIOS         = var.netbios                            # NetBIOS name
+    jsmith_password = random_password.jsmith_password.result # Insert John Smith's random password
+    edavis_password = random_password.edavis_password.result # Insert Emily Davis's random password
+    rpatel_password = random_password.rpatel_password.result # Insert Raj Patel's random password
+    akumar_password = random_password.akumar_password.result # Insert Amit Kumar's random password
+  })
+}
+
