@@ -104,11 +104,11 @@ resource "aws_vpc_dhcp_options_association" "mini_ad_dns_assoc" {
 
 locals {
   default_users_json = templatefile("${path.module}/scripts/users.json.template", {
-    USER_BASE_DN      = var.user_base_dn   # Base DN for placing new users in LDAP
-    DNS_ZONE          = var.dns_zone       # AD-integrated DNS zone
-    REALM             = var.realm          # Kerberos realm (FQDN in uppercase)
-    NETBIOS           = var.netbios        # NetBIOS domain name
-    sysadmin_password = var.admin_password # Sysadmin password
+    USER_BASE_DN      = var.user_base_dn      # Base DN for placing new users in LDAP
+    DNS_ZONE          = var.dns_zone          # AD-integrated DNS zone
+    REALM             = var.realm             # Kerberos realm (FQDN in uppercase)
+    NETBIOS           = var.netbios           # NetBIOS domain name
+    sysadmin_password = var.ad_admin_password # Sysadmin password
   })
 }
 

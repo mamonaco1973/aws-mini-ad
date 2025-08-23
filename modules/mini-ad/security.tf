@@ -6,7 +6,7 @@
 resource "aws_security_group" "ad_sg" {
   name        = "mini-ad-sg"
   description = "Security group for mini Active Directory services (open to all IPv4)"
-  vpc_id      = aws_vpc.ad-vpc.id
+  vpc_id      = var.vpc_id
 
   # -----------------------------------
   # DNS (TCP/UDP 53) – name resolution for clients and AD replication

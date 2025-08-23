@@ -16,7 +16,7 @@ module "mini_ad" {
   user_base_dn      = var.user_base_dn                           # Base DN for user accounts in LDAP
   ad_admin_password = random_password.admin_password.result      # Randomized AD administrator password
   dns_zone          = var.dns_zone                               # DNS zone (e.g., mcloud.mikecloud.com)
-  subnet_id         = aws_subnet.mini_ad_subnet.id               # Subnet for AD VM placement
+  subnet_id         = aws_subnet.ad-subnet.id             # Subnet for AD VM placement
 
   # Ensure NAT + route association exist before bootstrapping (for package repos, etc.)
    depends_on = [
