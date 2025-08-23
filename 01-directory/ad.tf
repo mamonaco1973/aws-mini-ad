@@ -9,7 +9,6 @@
 
 module "mini_ad" {
   source            = "../modules/mini-ad"                       # Path to the mini-ad Terraform module
-  region            =  "us-east-1"
   netbios           = var.netbios                                # NetBIOS domain name (e.g., MCLOUD)
   vpc_id            = aws_vpc.ad-vpc.id                          # VPC where the AD will reside
   realm             = var.realm                                  # Kerberos realm (usually UPPERCASE DNS domain)
@@ -17,8 +16,7 @@ module "mini_ad" {
   user_base_dn      = var.user_base_dn                           # Base DN for user accounts in LDAP
   ad_admin_password = random_password.admin_password.result      # Randomized AD administrator password
   dns_zone          = var.dns_zone                               # DNS zone (e.g., mcloud.mikecloud.com)
-  subnet_id         = azurerm_subnet.mini_ad_subnet.id           # Subnet for AD VM placement
-  admin_password    = random_password.sysadmin_password.result   # Linux sysadmin password for AD VM
+  subnet_id         = aws_subnet.mini_ad_subnet.id               # Subnet for AD VM placement
 
   # Ensure NAT + route association exist before bootstrapping (for package repos, etc.)
    depends_on = [

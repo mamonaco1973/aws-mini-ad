@@ -4,11 +4,6 @@
 #   - Define all input parameters required for provisioning the Samba AD DC EC2
 # ==================================================================================================
 
-variable "region" {
-  description = "AWS region where resources will be created."
-  type        = string
-}
-
 variable "dns_zone" {
   description = "DNS zone for the Samba AD domain (e.g., mcloud.mikecloud.com)."
   type        = string
@@ -35,20 +30,8 @@ variable "instance_type" {
   default     = "t3.small"
 }
 
-variable "admin_username" {
-  description = "Local admin username for the Linux VM."
-  type        = string
-  default     = "sysadmin"
-}
-
-variable "admin_password" {
-  description = "Local admin password for the Linux VM."
-  type        = string
-  sensitive   = true
-}
-
 variable "ad_admin_password" {
-  description = "Password for the AD Administrator account used in Samba bootstrap."
+  description = "Password for the AD Administrator and Admin account used in Samba bootstrap."
   type        = string
   sensitive   = true
 }
