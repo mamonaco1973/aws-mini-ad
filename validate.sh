@@ -28,7 +28,7 @@ windows_dns=$(aws ec2 describe-instances \
 if [ -z "$windows_dns" ]; then
   echo "WARN: No Windows AD instance found with tag Name=windows-ad-instance"
 else
-  echo "NOTE: Windows Instance DNS: $windows_dns"
+  echo "NOTE: Windows Instance DNS: $(echo $windows_dns | xargs)"
 fi
 
 # --------------------------------------------------------------------------------------------------
@@ -42,5 +42,5 @@ linux_dns=$(aws ec2 describe-instances \
 if [ -z "$linux_dns" ]; then
   echo "WARN: No Linux AD instance found with tag Name=linux-ad-instance"
 else
-  echo "NOTE: Linux Instance DNS: $(echo $linux_dns | xargs)"
+  echo "NOTE: Linux Instance DNS:   $(echo $linux_dns | xargs)"
 fi
