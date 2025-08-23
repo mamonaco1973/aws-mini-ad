@@ -30,7 +30,7 @@ data "aws_ami" "ubuntu_ami" {
 # ==================================================================================================
 resource "aws_instance" "mini_ad_dc_instance" {
   ami                    = data.aws_ami.ubuntu_ami.id
-  instance_type          = "t3.small"                    # Small, adequate for lab AD DC; scale up for real loads
+  instance_type          = var.instance_type             # Small, adequate for lab AD DC; scale up for real loads
   subnet_id              = var.subnet_id                 # Place in private subnet
   vpc_security_group_ids = [aws_security_group.ad_sg.id] # Open required AD/DC ports per your SG
 
