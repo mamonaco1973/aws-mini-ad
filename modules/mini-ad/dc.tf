@@ -38,7 +38,7 @@ resource "aws_instance" "mini_ad_dc_instance" {
 
   iam_instance_profile = aws_iam_instance_profile.ec2_ssm_profile.name
 
-  user_data = templatefile("./scripts/mini-ad.sh.template", {
+  user_data = templatefile("${path.module}/scripts/mini-ad.sh.template", {
     HOSTNAME_DC        = "ad1"
     DNS_ZONE           = var.dns_zone
     REALM              = var.realm
