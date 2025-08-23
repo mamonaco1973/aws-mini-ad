@@ -51,12 +51,6 @@ resource "aws_instance" "mini_ad_dc_instance" {
   tags = {
     Name = "mini-ad-dc-${lower(var.netbios)}"
   }
-
-#   # Ensure NAT + route association exist before bootstrapping (for package repos, etc.)
-#   depends_on = [
-#     aws_nat_gateway.ad_nat,
-#     aws_route_table_association.rt_assoc_ad_private
-#   ]
 }
 
 # ==================================================================================================
@@ -87,7 +81,7 @@ resource "time_sleep" "wait_for_mini_ad" {
 # This causes new DHCP leases to prefer the DC for DNS resolution within the VPC
 # ==================================================================================================
 resource "aws_vpc_dhcp_options_association" "mini_ad_dns_assoc" {
-  vpc_id          = aws_vpc.ad-vpc.id
+  vpc_id          = var.vpc_id
   dhcp_options_id = aws_vpc_dhcp_options.mini_ad_dns.id
   depends_on      = [time_sleep.wait_for_mini_ad]
 }
