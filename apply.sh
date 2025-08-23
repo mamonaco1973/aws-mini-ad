@@ -47,16 +47,16 @@ terraform apply -auto-approve
 
 cd .. || exit
 
-# # --------------------------------------------------------------------------------------------------
-# # Phase 2: Build EC2 Server Instances
-# # --------------------------------------------------------------------------------------------------
-# echo "NOTE: Building EC2 server instances..."
-# cd 02-servers || { echo "ERROR: Directory 02-servers not found"; exit 1; }
+# --------------------------------------------------------------------------------------------------
+# Phase 2: Build EC2 Server Instances
+# --------------------------------------------------------------------------------------------------
+echo "NOTE: Building EC2 server instances..."
+cd 02-servers || { echo "ERROR: Directory 02-servers not found"; exit 1; }
 
-# terraform init
-# terraform apply -auto-approve
+terraform init
+terraform apply -auto-approve
 
-# cd .. || exit
+cd .. || exit
 
 # --------------------------------------------------------------------------------------------------
 # Build Validation
