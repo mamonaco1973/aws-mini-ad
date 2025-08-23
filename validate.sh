@@ -42,5 +42,5 @@ linux_dns=$(aws ec2 describe-instances \
 if [ -z "$linux_dns" ]; then
   echo "WARN: No Linux AD instance found with tag Name=linux-ad-instance"
 else
-  echo "NOTE: Linux Instance DNS: $linux_dns"
+  echo "NOTE: Linux Instance DNS  : $linux_dns"
 fi
