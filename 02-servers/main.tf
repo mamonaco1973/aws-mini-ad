@@ -14,14 +14,14 @@ data "aws_secretsmanager_secret" "admin_secret" {
 
 data "aws_subnet" "vm_subnet_1" {
   filter {
-    name   = "tag:Name"    # Match based on the 'Name' tag
+    name   = "tag:Name"      # Match based on the 'Name' tag
     values = ["vm-subnet-1"] # Look for a subnet tagged as "vm-subnet-1"
   }
 }
 
 data "aws_subnet" "vm_subnet_2" {
   filter {
-    name   = "tag:Name"    # Match based on the 'Name' tag
+    name   = "tag:Name"      # Match based on the 'Name' tag
     values = ["vm-subnet-2"] # Look for a subnet tagged as "vm-subnet-2"
   }
 }

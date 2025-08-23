@@ -67,5 +67,5 @@ resource "aws_instance" "windows_ad_instance" {
   # Metadata tag used to identify and organize resources in AWS.
   tags = {
     Name = "windows-ad-instance" # The EC2 instance name in AWS.
-  }   
+  }
 }
