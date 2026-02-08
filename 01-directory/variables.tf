@@ -1,46 +1,71 @@
-# ==================================================================================================
-# Active Directory naming inputs
-# - dns_zone : FQDN for the AD DNS zone / domain (e.g., mcloud.mikecloud.com)
-# - realm    : Kerberos realm (typically the DNS zone in UPPERCASE)
-# - netbios  : Short (pre-Windows 2000) domain name used by legacy/NetBIOS-aware systems
-# ==================================================================================================
+# ==============================================================================
+# Active Directory Naming Inputs
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Defines domain naming inputs for the mini-AD deployment.
+#
+# Scope:
+#   - dns_zone: AD DNS zone / domain (FQDN) used by Samba AD DC.
+#   - realm:    Kerberos realm (typically dns_zone in uppercase).
+#   - netbios:  Short domain name used by legacy / NetBIOS-aware systems.
+#   - user_base_dn: LDAP base DN where demo users are created.
+#
+# Notes:
+#   - Keep realm aligned with dns_zone. Kerberos is case-sensitive by
+#     convention and expects uppercase realms in most tooling.
+# ==============================================================================
 
-# --------------------------------------------------------------------------------
-# DNS zone / AD domain (FQDN)
-# Used by Samba AD DC for DNS namespace and domain identity
-# --------------------------------------------------------------------------------
+# ==============================================================================
+# Variable: dns_zone
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Fully qualified AD DNS zone / domain name for the directory.
+# ==============================================================================
+
 variable "dns_zone" {
   description = "AD DNS zone / domain (e.g., mcloud.mikecloud.com)"
   type        = string
   default     = "mcloud.mikecloud.com"
 }
 
-# --------------------------------------------------------------------------------
-# Kerberos realm (UPPERCASE)
-# Convention: match dns_zone but uppercase; required by Kerberos config
-# --------------------------------------------------------------------------------
+# ==============================================================================
+# Variable: realm
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Kerberos realm name. Typically the dns_zone value in uppercase.
+# ==============================================================================
+
 variable "realm" {
-  description = "Kerberos realm (usually DNS zone in UPPERCASE, e.g., MCLOUD.MIKECLOUD.COM)"
+  description = "Kerberos realm (e.g., MCLOUD.MIKECLOUD.COM)"
   type        = string
   default     = "MCLOUD.MIKECLOUD.COM"
 }
 
-# --------------------------------------------------------------------------------
-# NetBIOS short domain name
-# Typically <= 15 characters, uppercase alphanumerics; used by legacy clients and some SMB flows
-# --------------------------------------------------------------------------------
+# ==============================================================================
+# Variable: netbios
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Short NetBIOS domain name used by legacy Windows / SMB flows.
+#
+# Notes:
+#   - NetBIOS names are commonly <= 15 characters and uppercase.
+# ==============================================================================
+
 variable "netbios" {
   description = "NetBIOS short domain name (e.g., MCLOUD)"
   type        = string
   default     = "MCLOUD"
 }
 
-# --------------------------------------------------------------------------------
-# User base DN for LDAP
-# --------------------------------------------------------------------------------
+# ==============================================================================
+# Variable: user_base_dn
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Base DN for creating demo users in LDAP.
+# ==============================================================================
 
 variable "user_base_dn" {
-  description = "User base DN for LDAP (e.g., CN=Users,DC=mcloud,DC=mikecloud,DC=com)"
+  description = "User base DN (e.g., CN=Users,DC=mcloud,DC=mikecloud,DC=com)"
   type        = string
   default     = "CN=Users,DC=mcloud,DC=mikecloud,DC=com"
 }

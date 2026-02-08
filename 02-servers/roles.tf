@@ -1,34 +1,66 @@
-# Define an IAM Role for EC2 instances to access AWS Secrets Manager
+# ==============================================================================
+# IAM Role and Instance Profile: EC2 Secrets Access
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Defines an IAM role assumed by EC2 instances.
+#   - Grants read-only access to required AWS Secrets Manager secrets.
+#   - Enables Systems Manager (SSM) access for remote management.
+#
+# Scope:
+#   - IAM role with EC2 trust policy.
+#   - Custom IAM policy for Secrets Manager access.
+#   - Policy attachments for SSM and Secrets Manager.
+#   - IAM instance profile for EC2 association.
+#
+# Notes:
+#   - IAM roles are preferred over static credentials.
+#   - Secret access is scoped to specific ARNs where possible.
+# ==============================================================================
+
+# ==============================================================================
+# IAM Role: EC2 Secrets Access
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Allows EC2 instances to assume an IAM role for AWS API access.
+# ==============================================================================
+
 resource "aws_iam_role" "ec2_secrets_role" {
   name = "EC2SecretsAccessRole-${var.netbios}"
 
-  # Define the trust policy allowing EC2 instances to assume this role
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "ec2.amazonaws.com" # Only EC2 instances can assume this role
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
       }
-      Action = "sts:AssumeRole" # Allows EC2 instances to request temporary credentials
-    }]
+    ]
   })
 }
 
-# Define an IAM Policy granting EC2 instances permission to read secrets from Secrets Manager
+# ==============================================================================
+# IAM Policy: Secrets Manager Read Access
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Grants EC2 instances permission to read AD credentials from
+#     AWS Secrets Manager.
+# ==============================================================================
+
 resource "aws_iam_policy" "secrets_policy" {
   name        = "SecretsManagerReadAccess"
-  description = "Allows EC2 instance to read secrets from AWS Secrets Manager and manage IAM instance profiles"
+  description = "Read access to required Secrets Manager secrets"
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      # Grant EC2 permission to retrieve secret values and list secrets
       {
         Effect = "Allow"
         Action = [
-          "secretsmanager:GetSecretValue", # Fetch secret values
-          "secretsmanager:DescribeSecret"  # Get metadata about secrets
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
         ]
         Resource = [
           data.aws_secretsmanager_secret.admin_secret.arn
@@ -38,22 +70,34 @@ resource "aws_iam_policy" "secrets_policy" {
   })
 }
 
-# Attach the AmazonSSMManagedInstanceCore policy to the secrets role
-# This allows EC2 instances using this role to interact with AWS Systems Manager (SSM)
+# ==============================================================================
+# IAM Policy Attachments
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Attaches AWS-managed and custom policies to the EC2 role.
+#
+# Notes:
+#   - AmazonSSMManagedInstanceCore enables SSM Session Manager access.
+# ==============================================================================
+
 resource "aws_iam_role_policy_attachment" "attach_ssm_policy" {
   role       = aws_iam_role.ec2_secrets_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# Attach the Secrets Manager access policy to the EC2 Secrets role
 resource "aws_iam_role_policy_attachment" "attach_secrets_policy" {
   role       = aws_iam_role.ec2_secrets_role.name
-  policy_arn = aws_iam_policy.secrets_policy.arn # Custom policy granting Secrets Manager access
+  policy_arn = aws_iam_policy.secrets_policy.arn
 }
 
-# Create an IAM Instance Profile for EC2 instances using the Secrets role
+# ==============================================================================
+# IAM Instance Profile
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Exposes the EC2 Secrets role to EC2 instances at launch time.
+# ==============================================================================
+
 resource "aws_iam_instance_profile" "ec2_secrets_profile" {
   name = "EC2SecretsInstanceProfile-${var.netbios}"
-  role = aws_iam_role.ec2_secrets_role.name # Associate the EC2SecretsAccessRole with this profile
+  role = aws_iam_role.ec2_secrets_role.name
 }
-

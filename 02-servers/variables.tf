@@ -1,34 +1,55 @@
-# ==================================================================================================
-# Active Directory naming inputs
-# - dns_zone : FQDN for the AD DNS zone / domain (e.g., mcloud.mikecloud.com)
-# - realm    : Kerberos realm (typically the DNS zone in UPPERCASE)
-# - netbios  : Short (pre-Windows 2000) domain name used by legacy/NetBIOS-aware systems
-# ==================================================================================================
+# ==============================================================================
+# Active Directory Naming Inputs
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Defines core naming inputs used by the mini-AD deployment.
+#
+# Scope:
+#   - dns_zone: Fully qualified AD DNS domain.
+#   - realm:    Kerberos realm name derived from the DNS domain.
+#   - netbios:  Short domain name for legacy and NetBIOS-aware systems.
+#
+# Notes:
+#   - Keep realm aligned with dns_zone. Kerberos tooling expects uppercase
+#     realm names by convention.
+# ==============================================================================
 
-# --------------------------------------------------------------------------------
-# DNS zone / AD domain (FQDN)
-# Used by Samba AD DC for DNS namespace and domain identity
-# --------------------------------------------------------------------------------
+# ==============================================================================
+# Variable: dns_zone
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Fully qualified DNS domain name for the Active Directory forest.
+# ==============================================================================
+
 variable "dns_zone" {
   description = "AD DNS zone / domain (e.g., mcloud.mikecloud.com)"
   type        = string
   default     = "mcloud.mikecloud.com"
 }
 
-# --------------------------------------------------------------------------------
-# Kerberos realm (UPPERCASE)
-# Convention: match dns_zone but uppercase; required by Kerberos config
-# --------------------------------------------------------------------------------
+# ==============================================================================
+# Variable: realm
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Kerberos realm name. Typically the dns_zone value in uppercase.
+# ==============================================================================
+
 variable "realm" {
-  description = "Kerberos realm (usually DNS zone in UPPERCASE, e.g., MCLOUD.MIKECLOUD.COM)"
+  description = "Kerberos realm (e.g., MCLOUD.MIKECLOUD.COM)"
   type        = string
   default     = "MCLOUD.MIKECLOUD.COM"
 }
 
-# --------------------------------------------------------------------------------
-# NetBIOS short domain name
-# Typically <= 15 characters, uppercase alphanumerics; used by legacy clients and some SMB flows
-# --------------------------------------------------------------------------------
+# ==============================================================================
+# Variable: netbios
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Short NetBIOS domain name used by legacy Windows and SMB flows.
+#
+# Notes:
+#   - NetBIOS names are commonly <= 15 characters and uppercase.
+# ==============================================================================
+
 variable "netbios" {
   description = "NetBIOS short domain name (e.g., MCLOUD)"
   type        = string
