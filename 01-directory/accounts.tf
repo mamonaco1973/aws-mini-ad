@@ -13,7 +13,7 @@
 resource "random_password" "admin_password" {
   length           = 24
   special          = true
-  override_special = "_-."
+  override_special = "_-"
 }
 
 resource "aws_secretsmanager_secret" "admin_secret" {
