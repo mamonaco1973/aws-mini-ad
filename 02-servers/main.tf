@@ -69,7 +69,7 @@ data "aws_subnet" "vm_subnet_2" {
 data "aws_vpc" "ad_vpc" {
   filter {
     name   = "tag:Name"
-    values = ["ad-vpc"]
+    values = [var.vpc_name]
   }
 }
 

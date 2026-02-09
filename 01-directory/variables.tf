@@ -69,3 +69,16 @@ variable "user_base_dn" {
   type        = string
   default     = "CN=Users,DC=mcloud,DC=mikecloud,DC=com"
 }
+
+# ==============================================================================
+# Variable: vpc_name
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Name for the VPC to create
+# ==============================================================================
+
+variable "vpc_name" {
+  description = "Name for the VPC"
+  type        = string
+  default     = "mini-ad-vpc"
+}

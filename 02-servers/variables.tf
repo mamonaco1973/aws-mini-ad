@@ -55,3 +55,16 @@ variable "netbios" {
   type        = string
   default     = "MCLOUD"
 }
+
+# ==============================================================================
+# Variable: vpc_name
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Name for the VPC to create
+# ==============================================================================
+
+variable "vpc_name" {
+  description = "Name for the VPC"
+  type        = string
+  default     = "mini-ad-vpc"
+}
