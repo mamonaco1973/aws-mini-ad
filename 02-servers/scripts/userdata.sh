@@ -74,7 +74,7 @@ admin_username=$(echo $secretValue | jq -r '.username' | sed 's/.*\\//')
 # - Log the output and errors to /tmp/join.log for debugging.
 echo -e "$admin_password" | sudo /usr/sbin/realm join -U "$admin_username" \
     ${domain_fqdn} --verbose \
-    >> /tmp/join.log 2>> /tmp/join.log
+    >> >> /root/join.log 2>> /root/join.log
 
 # ---------------------------------------------------------------------------------
 # Section 4: Allow Password Authentication for AD Users
