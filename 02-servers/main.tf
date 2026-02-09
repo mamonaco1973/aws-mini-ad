@@ -13,7 +13,7 @@
 #
 # Notes:
 #   - Tag-based discovery assumes the network baseline has already been applied.
-#   - Ensure Name tags are unique in the target account/region.
+#   - Subnet Name tags are NOT unique in AWS; always scope subnet lookups to VPC.
 # ==============================================================================
 
 # ==============================================================================
@@ -26,37 +26,10 @@ provider "aws" {
 
 # ==============================================================================
 # Secrets Manager: AD Administrator Secret Lookup
-# ------------------------------------------------------------------------------
-# Purpose:
-#   - Locates the existing secret that stores AD administrator credentials.
 # ==============================================================================
 
 data "aws_secretsmanager_secret" "admin_secret" {
   name = "admin_ad_credentials"
-}
-
-# ==============================================================================
-# Subnet Lookups
-# ------------------------------------------------------------------------------
-# Purpose:
-#   - Locates existing public subnets by Name tag for VM placement.
-#
-# Notes:
-#   - Subnets must exist and be tagged consistently with the network baseline.
-# ==============================================================================
-
-data "aws_subnet" "vm_subnet_1" {
-  filter {
-    name   = "tag:Name"
-    values = ["vm-subnet-1"]
-  }
-}
-
-data "aws_subnet" "vm_subnet_2" {
-  filter {
-    name   = "tag:Name"
-    values = ["vm-subnet-2"]
-  }
 }
 
 # ==============================================================================
@@ -74,13 +47,41 @@ data "aws_vpc" "ad_vpc" {
 }
 
 # ==============================================================================
-# AMI Lookup: Windows Server 2022 (Amazon)
+# Subnet Lookups (Scoped to VPC)
 # ------------------------------------------------------------------------------
 # Purpose:
-#   - Locates the latest Windows Server 2022 base AMI published by Amazon.
+#   - Locates existing public subnets by Name tag for VM placement.
 #
 # Notes:
-#   - Using most_recent ensures the build tracks new AMI releases over time.
+#   - Subnet Name tags are not unique; vpc-id filter prevents collisions.
+# ==============================================================================
+
+data "aws_subnet" "vm_subnet_1" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.ad_vpc.id]
+  }
+
+  filter {
+    name   = "tag:Name"
+    values = ["vm-subnet-1"]
+  }
+}
+
+data "aws_subnet" "vm_subnet_2" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.ad_vpc.id]
+  }
+
+  filter {
+    name   = "tag:Name"
+    values = ["vm-subnet-2"]
+  }
+}
+
+# ==============================================================================
+# AMI Lookup: Windows Server 2022 (Amazon)
 # ==============================================================================
 
 data "aws_ami" "windows_ami" {
