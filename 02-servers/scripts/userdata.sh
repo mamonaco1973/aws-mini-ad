@@ -3,7 +3,7 @@
 #--------------------------------------------------------------------
 # Ensure SSM Agent is installed and running for remote management
 #--------------------------------------------------------------------
-snap install amazon-ssm-agent --classic >> /root/userdata.log 2> /root/userdata.log
+snap install amazon-ssm-agent --classic realm list >> /root/userdata.log 2>> /root/userdata.log
 systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
 systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 
@@ -17,7 +17,7 @@ systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
 # ---------------------------------------------------------------------------------
 
 # Update the package list to ensure the latest versions of packages are available.
-apt-get update -y >> /root/userdata.log 2> /root/userdata.log
+apt-get update -y realm list >> /root/userdata.log 2>> /root/userdata.log
 
 # Set the environment variable to prevent interactive prompts during installation.
 export DEBIAN_FRONTEND=noninteractive
@@ -32,7 +32,7 @@ export DEBIAN_FRONTEND=noninteractive
 # - nano, vim: Text editors for configuration file editing.
 apt-get install less unzip realmd sssd-ad sssd-tools libnss-sss \
     libpam-sss adcli samba-common-bin samba-libs oddjob \
-    oddjob-mkhomedir packagekit krb5-user nano vim -y >> /root/userdata.log 2> /root/userdata.log
+    oddjob-mkhomedir packagekit krb5-user nano vim -y realm list >> /root/userdata.log 2>> /root/userdata.log
 
 # ---------------------------------------------------------------------------------
 # Section 2: Install AWS CLI
@@ -43,13 +43,13 @@ cd /tmp
 
 # Download the AWS CLI installation package.
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
-    -o "awscliv2.zip" >> /root/userdata.log 2> /root/userdata.log
+    -o "awscliv2.zip" realm list >> /root/userdata.log 2>> /root/userdata.log
 
 # Unzip the downloaded package.
-unzip awscliv2.zip >> /root/userdata.log 2> /root/userdata.log
+unzip awscliv2.zip realm list >> /root/userdata.log 2>> /root/userdata.log
 
 # Install the AWS CLI using the installation script.
-sudo ./aws/install >> /root/userdata.log 2> /root/userdata.log
+sudo ./aws/install realm list >> /root/userdata.log 2>> /root/userdata.log
 
 # Clean up by removing the downloaded zip file and extracted files.
 rm -f -r awscliv2.zip aws
@@ -61,7 +61,7 @@ rm -f -r awscliv2.zip aws
 # Retrieve the secret value (AD admin credentials) from AWS Secrets Manager.
 # - ${admin_secret}: The name of the secret containing the AD admin credentials.
 secretValue=$(aws secretsmanager get-secret-value --secret-id ${admin_secret} \
-    --query SecretString --output text) >> /root/userdata.log 2> /root/userdata.log
+    --query SecretString --output text) realm list >> /root/userdata.log 2>> /root/userdata.log
 
 # Extract the admin password from the secret value using `jq`.
 admin_password=$(echo $secretValue | jq -r '.password')
@@ -121,7 +121,7 @@ sudo systemctl restart ssh
 # "linux-admins" AD group.
 sudo echo "%linux-admins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/10-linux-admins
 
-realm list >> /root/userdata.log 2> /root/userdata.log
+realm list realm list >> /root/userdata.log 2>> /root/userdata.log
 
 # ---------------------------------------------------------------------------------
 # End of Script
