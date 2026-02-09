@@ -16,6 +16,16 @@
 #   - IAM roles are preferred over static credentials.
 #   - Secret access is scoped to specific ARNs where possible.
 # ==============================================================================
+# ------------------------------------------------------------------------------
+# Automatic unique suffix (stable per deployment/state)
+# ------------------------------------------------------------------------------
+resource "random_id" "iam_suffix" {
+  byte_length = 3 # 6 hex chars (e.g., a1b2c3) - short but plenty unique
+}
+
+locals {
+  iam_id = "mini-ad-${var.netbios}-${random_id.iam_suffix.hex}"
+}
 
 # ==============================================================================
 # IAM Role: EC2 Secrets Access
@@ -25,7 +35,7 @@
 # ==============================================================================
 
 resource "aws_iam_role" "ec2_secrets_role" {
-  name = "EC2SecretsAccessRole-${var.netbios}"
+  name = "tf-secrets-role-${local.iam_id}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -98,6 +108,6 @@ resource "aws_iam_role_policy_attachment" "attach_secrets_policy" {
 # ==============================================================================
 
 resource "aws_iam_instance_profile" "ec2_secrets_profile" {
-  name = "EC2SecretsInstanceProfile-${var.netbios}"
+  name ="tf-secrets-profile-${local.iam_id}"
   role = aws_iam_role.ec2_secrets_role.name
 }
