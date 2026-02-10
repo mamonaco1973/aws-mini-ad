@@ -1,128 +1,85 @@
 #!/bin/bash
+set -euo pipefail
 
-#--------------------------------------------------------------------
-# Ensure SSM Agent is installed and running for remote management
-#--------------------------------------------------------------------
-snap install amazon-ssm-agent --classic realm list >> /root/userdata.log 2>> /root/userdata.log
-systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
-systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
+LOG=/root/userdata.log
+mkdir -p /root
+touch "$LOG"
+chmod 600 "$LOG"
+exec > >(tee -a "$LOG" | logger -t user-data -s 2>/dev/console) 2>&1
+trap 'echo "ERROR at line $LINENO"; exit 1' ERR
 
+echo "user-data start: $(date -Is)"
 
-# This script automates the process of updating the OS, installing required packages,
-# joining an Active Directory (AD) domain, configuring system settings, and cleaning
-# up permissions.
+# Inputs (Terraform-injected)
+ADMIN_SECRET="${admin_secret}"
+DOMAIN_FQDN="${domain_fqdn}"
 
-# ---------------------------------------------------------------------------------
-# Section 1: Update the OS and Install Required Packages
-# ---------------------------------------------------------------------------------
+# SSM agent (snap)
+snap install amazon-ssm-agent --classic
+systemctl enable --now snap.amazon-ssm-agent.amazon-ssm-agent.service
 
-# Update the package list to ensure the latest versions of packages are available.
-apt-get update -y realm list >> /root/userdata.log 2>> /root/userdata.log
-
-# Set the environment variable to prevent interactive prompts during installation.
+# Packages
 export DEBIAN_FRONTEND=noninteractive
+apt-get update -y
+apt-get install -y \
+  less unzip curl jq \
+  realmd sssd-ad sssd-tools libnss-sss libpam-sss \
+  adcli samba-common-bin samba-libs \
+  oddjob oddjob-mkhomedir packagekit krb5-user \
+  nano vim
 
-# Install necessary packages for AD integration, system management, and utilities.
-# - realmd, sssd-ad, sssd-tools: Tools for AD integration and authentication.
-# - libnss-sss, libpam-sss: Libraries for integrating SSSD with the system.
-# - adcli, samba-common-bin, samba-libs: Tools for AD and Samba integration.
-# - oddjob, oddjob-mkhomedir: Automatically create home directories for AD users.
-# - packagekit: Package management toolkit.
-# - krb5-user: Kerberos authentication tools.
-# - nano, vim: Text editors for configuration file editing.
-apt-get install less unzip realmd sssd-ad sssd-tools libnss-sss \
-    libpam-sss adcli samba-common-bin samba-libs oddjob \
-    oddjob-mkhomedir packagekit krb5-user nano vim -y realm list >> /root/userdata.log 2>> /root/userdata.log
-
-# ---------------------------------------------------------------------------------
-# Section 2: Install AWS CLI
-# ---------------------------------------------------------------------------------
-
-# Change to the /tmp directory to download and install the AWS CLI.
+# AWS CLI v2
 cd /tmp
+curl -s https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
+unzip -q awscliv2.zip
+./aws/install --update
+rm -rf awscliv2.zip aws
 
-# Download the AWS CLI installation package.
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
-    -o "awscliv2.zip" realm list >> /root/userdata.log 2>> /root/userdata.log
+# Join AD (pull creds from Secrets Manager)
+SECRET_JSON="$(aws secretsmanager get-secret-value \
+  --secret-id "$ADMIN_SECRET" \
+  --query SecretString \
+  --output text)"
 
-# Unzip the downloaded package.
-unzip awscliv2.zip realm list >> /root/userdata.log 2>> /root/userdata.log
+ADMIN_PASSWORD="$(echo "$SECRET_JSON" | jq -r '.password')"
+ADMIN_USERNAME="$(echo "$SECRET_JSON" | jq -r '.username' | sed 's/.*\\//')"
 
-# Install the AWS CLI using the installation script.
-sudo ./aws/install realm list >> /root/userdata.log 2>> /root/userdata.log
+echo "Joining domain $DOMAIN_FQDN as $ADMIN_USERNAME"
+echo "$ADMIN_PASSWORD" | realm join -U "$ADMIN_USERNAME" "$DOMAIN_FQDN" --verbose \
+  >> /root/join.log 2>&1
 
-# Clean up by removing the downloaded zip file and extracted files.
-rm -f -r awscliv2.zip aws
-
-# ---------------------------------------------------------------------------------
-# Section 3: Join the Active Directory Domain
-# ---------------------------------------------------------------------------------
-
-# Retrieve the secret value (AD admin credentials) from AWS Secrets Manager.
-# - ${admin_secret}: The name of the secret containing the AD admin credentials.
-secretValue=$(aws secretsmanager get-secret-value --secret-id ${admin_secret} \
-    --query SecretString --output text) realm list >> /root/userdata.log 2>> /root/userdata.log
-
-# Extract the admin password from the secret value using `jq`.
-admin_password=$(echo $secretValue | jq -r '.password')
-
-# Extract the admin username from the secret value and remove the domain prefix.
-admin_username=$(echo $secretValue | jq -r '.username' | sed 's/.*\\//')
-
-# Join the Active Directory domain using the `realm` command.
-# - ${domain_fqdn}: The fully qualified domain name (FQDN) of the AD domain.
-# - Log the output and errors to /tmp/join.log for debugging.
-echo -e "$admin_password" | sudo /usr/sbin/realm join -U "$admin_username" \
-    ${domain_fqdn} --verbose \
-    >> >> /root/join.log 2>> /root/join.log
-
-# ---------------------------------------------------------------------------------
-# Section 4: Allow Password Authentication for AD Users
-# ---------------------------------------------------------------------------------
-
-# Modify the SSH configuration to allow password authentication for AD users.
-# - Replace `PasswordAuthentication no` with `PasswordAuthentication yes`.
-sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' \
+# SSH: allow password auth (cloud image file may not exist on all distros)
+if [ -f /etc/ssh/sshd_config.d/60-cloudimg-settings.conf ]; then
+  sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' \
     /etc/ssh/sshd_config.d/60-cloudimg-settings.conf
+else
+  sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication yes/g' /etc/ssh/sshd_config || true
+fi
 
-# ---------------------------------------------------------------------------------
-# Section 5: Configure SSSD for AD Integration
-# ---------------------------------------------------------------------------------
+# SSSD tweaks (only if file exists)
+if [ -f /etc/sssd/sssd.conf ]; then
+  sed -i 's/use_fully_qualified_names = True/use_fully_qualified_names = False/g' /etc/sssd/sssd.conf || true
+  sed -i 's/ldap_id_mapping = True/ldap_id_mapping = False/g' /etc/sssd/sssd.conf || true
+  sed -i 's|fallback_homedir = /home/%u@%d|fallback_homedir = /home/%u|g' /etc/sssd/sssd.conf || true
+  chmod 600 /etc/sssd/sssd.conf || true
+fi
 
-# Modify the SSSD configuration file to simplify user login and home directory creation.
-# - Disable fully qualified names (use only usernames instead of user@domain).
-sudo sed -i 's/use_fully_qualified_names = True/use_fully_qualified_names = False/g' \
-    /etc/sssd/sssd.conf
-
-# Disable LDAP ID mapping to use UIDs and GIDs from AD.
-sudo sed -i 's/ldap_id_mapping = True/ldap_id_mapping = False/g' \
-    /etc/sssd/sssd.conf
-
-# Change the fallback home directory path to a simpler format (/home/%u).
-sudo sed -i 's|fallback_homedir = /home/%u@%d|fallback_homedir = /home/%u|' \
-    /etc/sssd/sssd.conf
-
-# Stop XAuthority warning 
-
+# Avoid XAuthority warning for new users
 touch /etc/skel/.Xauthority
 chmod 600 /etc/skel/.Xauthority
 
-# Restart the SSSD and SSH services to apply the changes.
+# Enable mkhomedir + restart services
+pam-auth-update --enable mkhomedir || true
+systemctl restart sssd || true
+systemctl restart ssh || systemctl restart sshd || true
 
-sudo pam-auth-update --enable mkhomedir
-sudo systemctl restart sssd
-sudo systemctl restart ssh
+# Sudoers for linux-admins group (idempotent)
+SUDO_FILE=/etc/sudoers.d/10-linux-admins
+if [ ! -f "$SUDO_FILE" ]; then
+  echo "%linux-admins ALL=(ALL) NOPASSWD:ALL" > "$SUDO_FILE"
+  chmod 440 "$SUDO_FILE"
+fi
 
-# ---------------------------------------------------------------------------------
-# Section 6: Grant Sudo Privileges to AD Linux Admins
-# ---------------------------------------------------------------------------------
-
-# Add a sudoers rule to grant passwordless sudo access to members of the
-# "linux-admins" AD group.
-sudo echo "%linux-admins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/10-linux-admins
-
-realm list realm list >> /root/userdata.log 2>> /root/userdata.log
-
-# ---------------------------------------------------------------------------------
-# End of Script
-# ---------------------------------------------------------------------------------
+# Quick status
+realm list || true
+echo "user-data complete: $(date -Is)"
